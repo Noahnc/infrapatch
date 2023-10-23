@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pygohcl
 
-from infrapatch_cli.hcl_edit_cli import HclEditCli
-from infrapatch_cli.models import TerraformModule, TerraformProvider, VersionedTerraformResource
+from infrapatch_cli.utils.hcl_edit_cli import HclEditCli
+from infrapatch_cli.models.versioned_terraform_resources import TerraformModule, TerraformProvider, VersionedTerraformResource
 
 
 class HclHandler:

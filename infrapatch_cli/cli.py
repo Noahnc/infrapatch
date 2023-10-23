@@ -9,9 +9,9 @@ from rich.console import Console
 import infrapatch_cli.constants as cs
 from infrapatch_cli.__init__ import __version__
 from infrapatch_cli.composition import MainHandler
-from infrapatch_cli.hcl_edit_cli import HclEditCli
-from infrapatch_cli.hcl_handler import HclHandler
-from infrapatch_cli.registry_handler import RegistryHandler
+from infrapatch_cli.utils.hcl_edit_cli import HclEditCli
+from infrapatch_cli.utils.hcl_handler import HclHandler
+from infrapatch_cli.utils.registry_handler import RegistryHandler
 
 composition = None
 debug_exception = False

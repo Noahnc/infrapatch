@@ -1,4 +1,3 @@
-import dataclasses
 import json
 import logging as log
 from pathlib import Path
@@ -8,9 +7,9 @@ from rich.console import Console
 from rich.table import Table
 
 import infrapatch_cli.constants as cs
-from infrapatch_cli.hcl_handler import HclHandler
-from infrapatch_cli.models import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources, ResourceStatus, from_terraform_resources_to_dict_list
-from infrapatch_cli.registry_handler import RegistryHandler
+from infrapatch_cli.utils.hcl_handler import HclHandler
+from infrapatch_cli.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources, ResourceStatus, from_terraform_resources_to_dict_list
+from infrapatch_cli.utils.registry_handler import RegistryHandler
 
 
 class HclCliException:
