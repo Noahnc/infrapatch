@@ -38,6 +38,8 @@ class RegistryHandler:
             metadata_key = "modules.v1"
         elif isinstance(resource, TerraformProvider):
             metadata_key = "providers.v1"
+        else:
+            raise Exception(f"Resource type '{type(resource)}' is not supported.")
 
         version_url = urlparse(registry_metadata[metadata_key])
 
@@ -61,8 +63,10 @@ class RegistryHandler:
             versions = json.loads(response)["modules"][0]["versions"]
         elif isinstance(resource, TerraformProvider):
             versions = json.loads(response)["versions"]
-        sorted_verions = sorted(versions, key=lambda k: StrictVersion(k["version"]), reverse=True)
-        newest_version = sorted_verions[0]["version"]
+        else:
+            raise Exception(f"Resource type '{type(resource)}' is not supported.")
+        sorted_versions = sorted(versions, key=lambda k: StrictVersion(k["version"]), reverse=True)
+        newest_version = sorted_versions[0]["version"]
 
         if isinstance(resource, TerraformModule):
             self.cached_module_version[resource.source] = newest_version

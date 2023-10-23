@@ -1,3 +1,5 @@
+import dataclasses
+import json
 import logging as log
 from pathlib import Path
 
@@ -7,8 +9,12 @@ from rich.table import Table
 
 import infrapatch_cli.constants as cs
 from infrapatch_cli.hcl_handler import HclHandler
-from infrapatch_cli.models import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources
+from infrapatch_cli.models import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources, ResourceStatus, from_terraform_resources_to_dict_list
 from infrapatch_cli.registry_handler import RegistryHandler
+
+
+class HclCliException:
+    pass
 
 
 class MainHandler():
@@ -60,7 +66,7 @@ class MainHandler():
         else:
             print("No providers found.")
 
-    def update_resources(self, resources: list[VersionedTerraformResource], confirm: bool):
+    def update_resources(self, resources: list[VersionedTerraformResource], confirm: bool) -> list[VersionedTerraformResource]:
         upgradable_resources = get_upgradable_resources(resources)
         if len(upgradable_resources) == 0:
             log.info("All resources are up to date, nothing to do.")
@@ -72,7 +78,14 @@ class MainHandler():
                 return
         for resource in upgradable_resources:
             log.info(f"Updating '{resource.resource_name}' with name '{resource.name}' from version '{resource.current_version}' to '{resource.newest_version}'.")
-            self.hcl_handler.bump_resource_version(resource)
+            try:
+                self.hcl_handler.bump_resource_version(resource)
+            except HclCliException as e:
+                log.error(f"Could not update resource '{resource.name}': {e}")
+                resource.set_patch_error()
+                continue
+            resource.set_patched()
+        return upgradable_resources
 
     def _compose_resource_table(self, resources: list[VersionedTerraformResource], title: str):
         table = Table(show_header=True,
@@ -92,3 +105,41 @@ class MainHandler():
             )
         console = Console()
         console.print(table)
+
+    def dump_statistics(self, resources, save_as_json_file: bool = False):
+        providers = [resource for resource in resources if isinstance(resource, TerraformProvider)]
+        modules = [resource for resource in resources if isinstance(resource, TerraformModule)]
+        statistics = {}
+        statistics["errors"] = len([resource for resource in resources if resource.status == ResourceStatus.PATCH_ERROR])
+        statistics["resources_patched"] = len([resource for resource in resources if resource.status == ResourceStatus.PATCHED])
+        statistics["resources_pending_update"] = len([resource for resource in resources if resource.check_if_up_to_date() == False])
+        statistics["total_resources"] = len(resources)
+        statistics["modules_count"] = len(modules)
+        statistics["providers_count"] = len(providers)
+        statistics["modules"] = from_terraform_resources_to_dict_list(modules)
+        statistics["providers"] = from_terraform_resources_to_dict_list(providers)
+        if save_as_json_file:
+            file = Path(f"{cs.APP_NAME}_Statistics.json")
+            if file.exists():
+                file.unlink()
+            with open(file, "w") as f:
+                f.write(json.dumps(statistics))
+        table = Table(show_header=True,
+                      title="Statistics",
+                      width=cs.CLI_WIDTH
+                      )
+        table.add_column("Total Resources")
+        table.add_column("Resources Pending Update")
+        table.add_column("Resources Patched")
+        table.add_column("Errors")
+        table.add_column("Modules")
+        table.add_column("Providers")
+        table.add_row(
+            str(statistics["total_resources"]),
+            str(statistics["resources_pending_update"]),
+            str(statistics["resources_patched"]),
+            str(statistics["errors"]),
+            str(statistics["modules_count"]),
+            str(statistics["providers_count"])
+        )
+        Console().print(table)

@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Optional
 
 
+class HclEditCliException(Exception):
+    pass
+
+
 class HclEditCli:
     def __init__(self):
         pass
@@ -26,7 +30,7 @@ class HclEditCli:
     def get_hcl_value(self, resource: str, file: Path) -> str:
         result = self._run_hcl_edit_command("get", resource, file)
         if result is None:
-            raise Exception(f"Could not get value for resource '{resource}' from file '{file}'.")
+            raise HclEditCliException(f"Could not get value for resource '{resource}' from file '{file}'.")
 
     def _run_hcl_edit_command(self, action: str, resource: str, file: Path, value: str = None) -> Optional[str]:
         command = [self._get_binary_path().absolute().as_posix(), action, resource]
@@ -38,6 +42,6 @@ class HclEditCli:
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
             log.error(f"Stdout: {result.stdout}")
-            raise Exception(
+            raise HclEditCliException(
                 f"CLI command '{command_string}' failed with exit code {result.returncode}.")
         return result.stdout

@@ -1,4 +1,4 @@
-name: Terraform Dependencie Updater
+name: InfraPatch Github Action
 description: A github action to update provider and module dependencies in terraform files
 author: "Noah Canadea"
 runs:
@@ -8,6 +8,6 @@ runs:
       uses: actions/setup-python@v4
       with:
         python-version: "3.11"
-    - name: Install Dependencies
-      run: pip install -r requirements.txt
+    - name: Install infrapatch
+      run: pip install .
       shell: bash

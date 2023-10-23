@@ -30,7 +30,10 @@ def catch_exception(func=None, *, handle):
                 Console().print_exception()
             else:
                 log.error("An error occurred: " + str(e))
-
+            exit(1)
+        except KeyboardInterrupt:
+            log.error("Command was interrupted, exiting.")
+            exit(2)
     return wrapper
 
 
@@ -42,7 +45,7 @@ def setup_logging(debug: bool = False):
 
 
 def get_registry_credentials(hcl_handler: HclHandler, credentials_file: str = None) -> dict[str, str]:
-    credentials =  hcl_handler.get_credentials_form_user_rc_file()
+    credentials = hcl_handler.get_credentials_form_user_rc_file()
     if credentials_file is None:
         credentials_file = Path.cwd().joinpath(cs.DEFAULT_CREDENTIALS_FILE_NAME)
     else:
@@ -61,7 +64,6 @@ def get_registry_credentials(hcl_handler: HclHandler, credentials_file: str = No
         return credentials
     except Exception as e:
         raise Exception(f"Could not read credentials file: {e}")
-
 
 
 @click.group(invoke_without_command=True)
@@ -89,20 +91,25 @@ def main(debug: bool, version: bool, credentials_file_path: str, default_registr
 @main.command()
 @click.option("project_root", "--project-root", default=None, help="Root directory of the project. If not specified, the current working directory is used.")
 @click.option("--only-upgradable", is_flag=True, help="Only show providers and modules that can be upgraded.")
+@click.option("--dump-json-statistics", is_flag=True, help="Creates a json file containing statistics about the found resources and there update status as json file in the cwd.")
 @catch_exception(handle=Exception)
-def list(project_root: str, only_upgradable: bool):
+def list(project_root: str, only_upgradable: bool, dump_json_statistics: bool):
     """Finds all modules and providers in the project_root and prints there newest version."""
     if project_root is None: project_root = Path.cwd()
     global composition
     resources = composition.get_all_terraform_resources(Path(project_root))
     composition.print_resource_table(resources, only_upgradable)
+    composition.dump_statistics(resources, dump_json_statistics)
+
 
 @main.command()
 @click.option("project_root", "--project-root", default=None, help="Root directory of the project. If not specified, the current working directory is used.")
 @click.option("--confirm", is_flag=True, help="Apply changes without confirmation.")
+@click.option("--dump-json-statistics", is_flag=True, help="Creates a json file containing statistics about the updated resources in the cwd.")
 @catch_exception(handle=Exception)
-def update(project_root: str, confirm: bool):
+def update(project_root: str, confirm: bool, dump_json_statistics: bool):
     if project_root is None: project_root = Path.cwd()
     global composition
     resources = composition.get_all_terraform_resources(Path(project_root))
     composition.update_resources(resources, confirm)
+    composition.dump_statistics(resources, dump_json_statistics)

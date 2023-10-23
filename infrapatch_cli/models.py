@@ -6,12 +6,19 @@ from pathlib import Path
 from typing import Optional
 
 
+class ResourceStatus:
+    UNPATCHED = "unpatched"
+    PATCHED = "patched"
+    PATCH_ERROR = "patch_error"
+
+
 @dataclass
 class VersionedTerraformResource:
     name: str
     current_version: str
     source_file: Path
     newest_version: str = None
+    _status: str = ResourceStatus.UNPATCHED
     _base_domain: str = None
     _identifier: str = None
     _source: str = None
@@ -19,6 +26,10 @@ class VersionedTerraformResource:
     @property
     def source(self) -> str:
         return self._source
+
+    @property
+    def status(self) -> str:
+        return self._status
 
     @property
     def base_domain(self) -> Optional[str]:
@@ -35,12 +46,39 @@ class VersionedTerraformResource:
     def set_newest_version(self, version: str):
         self.newest_version = version
 
+    def set_patched(self):
+        self._status = ResourceStatus.PATCHED
+
+    def set_patch_error(self):
+        self._status = ResourceStatus.PATCH_ERROR
+
     def installed_version_equal_or_newer_than_new_version(self):
         if self.newest_version is None:
             raise Exception(f"Newest version of resource '{self.name}' is not set.")
         if StrictVersion(self.newest_version) > StrictVersion(self.current_version):
             return False
         return True
+
+    def check_if_up_to_date(self):
+        if self.status == ResourceStatus.PATCH_ERROR:
+            return False
+        if self.status == ResourceStatus.PATCHED:
+            return True
+        if self.installed_version_equal_or_newer_than_new_version():
+            return True
+        return False
+
+    def __to_dict__(self):
+        return {
+            "name": self.name,
+            "current_version": self.current_version,
+            "source_file": self.source_file.absolute().as_posix(),
+            "newest_version": self.newest_version,
+            "status": self.status,
+            "base_domain": self.base_domain,
+            "identifier": self.identifier,
+            "source": self.source
+        }
 
 
 @dataclass
@@ -106,4 +144,8 @@ class TerraformProvider(VersionedTerraformResource):
 
 
 def get_upgradable_resources(resources: list[VersionedTerraformResource]) -> list[VersionedTerraformResource]:
-    return [resource for resource in resources if not resource.installed_version_equal_or_newer_than_new_version()]
+    return [resource for resource in resources if not resource.check_if_up_to_date()]
+
+
+def from_terraform_resources_to_dict_list(dataclass_list: list[VersionedTerraformResource]) -> list[dict]:
+    return [dataclass.__to_dict__() for dataclass in dataclass_list]

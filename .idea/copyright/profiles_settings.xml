@@ -1,0 +1,9 @@
+<component name="CopyrightManager">
+  <settings>
+    <LanguageOptions name="Python">
+      <option name="fileTypeOverride" value="3" />
+      <option name="block" value="false" />
+      <option name="lenAfter" value="160" />
+    </LanguageOptions>
+  </settings>
+</component>
