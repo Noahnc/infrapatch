@@ -1,0 +1,13 @@
+name: Terraform Dependencie Updater
+description: A github action to update provider and module dependencies in terraform files
+author: "Noah Canadea"
+runs:
+  using: composite
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+      shell: bash
