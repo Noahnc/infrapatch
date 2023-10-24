@@ -58,7 +58,6 @@ runs:
         if [ "${{ inputs.report_only }}" == "true" ]; then
             arguments+=("--report-only")
         fi
-        arguments+=("--action" "test")
         arguments+=("--debug" "${{ runner.debug }}")
         arguments+=("--report-only" "${{ inputs.report_only }}")
         arguments+=("--github-token" "${{ inputs.github_token }}")
