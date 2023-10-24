@@ -58,14 +58,13 @@ runs:
         if [ "${{ inputs.report_only }}" == "true" ]; then
             arguments+=("--report-only")
         fi
-        arguments+=("--github-token" "${{ inputs.github_token }}")
-        arguments+=("--source-branch" "${{ inputs.source_branch_name }}")
-        arguments+=("--target-branch" "${{ inputs.target_branch_name }}")
-        arguments+=("--registry-secrets" "${{ inputs.registry_secrets }}")
-        arguments+=("--working-directory" "${{ inputs.working_directory }}")
-        arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
-        #python -m "$module" "${arguments[@]}"
-        python -m "$module" "--help"
+        arguments+=("--github-token" "\"${{ inputs.github_token }}\"")
+        arguments+=("--source-branch" "\"${{ inputs.source_branch_name }}\"")
+        arguments+=("--target-branch" "\"${{ inputs.target_branch_name }}\"")
+        arguments+=("--registry-secrets" "\"${{ inputs.registry_secrets }}\"")
+        arguments+=("--working-directory" "\"${{ inputs.working_directory }}\"")
+        arguments+=("--default-registry-domain" "\"${{ inputs.default_registry_domain }}\"")
+        python -m "$module" "${arguments[@]}"
 
     - name: Push changes
       if: ${{ inputs.push_changes == 'true' }}
