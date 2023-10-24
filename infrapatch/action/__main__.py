@@ -20,6 +20,7 @@ from git import Repo
 @catch_exception(handle=Exception)
 def main(debug: bool, default_registry_domain: str, registry_secrets_string: str, source_branch: str, target_branch: str, github_token: str, report_only: bool,
          working_directory: str):
+
     setup_logging(debug)
 
     main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=get_credentials_from_string(registry_secrets_string))
@@ -34,7 +35,7 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
         log.info("No upgradable resources found.")
         return
 
-    repo = Repo(project_root)
+    repo = Repo(working_directory)
     if repo.is_dirty():
         raise Exception("Repository is dirty. Please commit your changes before running infrapatch.")
     # check if the source branch exists
@@ -59,10 +60,12 @@ def get_credentials_from_string(credentials_string: str) -> dict:
     credentials = {}
     if credentials_string == "":
         return credentials
-    # loop through each line in the string
     for line in credentials_string.splitlines():
-        # split the line into name and token, separated by an equals sign, if multiple equals signs are present, only split on the first one
-        name, token = line.split("=", 1)
+        try:
+            name, token = line.split("=", 1)
+        except ValueError as e:
+            log.debug(f"Secrets line '{line}' could not be split into name and token.")
+            raise Exception(f"Error processing secrets: '{e}'")
         # add the name and token to the credentials dict
         credentials[name] = token
 
