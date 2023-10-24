@@ -2,10 +2,18 @@ name: InfraPatch Github Action
 description: A github action to update provider and module dependencies in terraform files
 author: "Noah Canadea"
 inputs:
-  target_branch:
-    description: "Target branch to create a pull request against"
+  source_branch_name:
+    description: "Source branch against which the PR will be created. Defaults to main"
     required: true
     default: "main"
+  target_branch_name:
+    description: "Name of the branch where changes will be pushed to. Defaults to feature/infra-patch"
+    required: true
+    default: "feature/infra-patch"
+  default_registry_domain:
+    description: "Default registry domain to use for modules and providers without explicit registry domain set. Defaults to registry.terraform.io"
+    required: false
+    default: "registry.terraform.io"
   push_changes:
     description: "Push changes to the target branch. Defaults to true"
     required: false
@@ -13,18 +21,18 @@ inputs:
   github_token:
     description: "GitHub access token. Defaults to github.token."
     default: ${{ github.token }}
-  command:
-    description: "The CLI Command to run, can be either report or update. Defaults to update"
-    default: "update"
+  report_only:
+    description: "Only report new versions. Do not update files. Defaults to false"
+    default: "true"
     required: true
-  patch_branch_name:
-    description: "Name of the branch where changes will be pushed to. Defaults to feature/infra-patch"
-    required: true
-    default: "feature/infra-patch"
   registry_secrets:
     description: "Registry secrets to use for private registries"
     required: false
     default: ""
+  working_directory:
+    description: "Working directory to run the command in. Defaults to the root of the repository"
+    required: false
+    default: ${{ github.workspace }}
 runs:
   using: composite
   steps:
@@ -32,17 +40,38 @@ runs:
       uses: actions/setup-python@v4
       with:
         python-version: "3.11"
-    - name: Install infrapatch
-      run: pip install .
+
+    - name: Install requirements
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
       shell: bash
-    - name: Run infrapatch
-      uses: ./action/
-      with:
-        target_branch: ${{ inputs.target_branch }}
-        registry_secrets: ${{ inputs.registry_secrets }}
-        command: ${{ inputs.command }}
-        patch_branch_name: ${{ inputs.patch_branch_name }}
-        github_token: ${{ inputs.github_token }}
+
+    - name: Run InfraPatch Action
+      shell: powershell
+      run: |
+        file = "./infrapatch/action/__main__.py"
+        arguments = []
+        if (${{ runner.debug }} -eq "1") {
+          arguments.append("--debug")
+        }
+        if (${{ inputs.report_only }} -eq "true") {
+          arguments.append("--report-only")
+        }
+        arguments.append("--github-token")
+        arguments.append(${{ inputs.github_token }})
+        arguments.append("--source-branch")
+        arguments.append(${{ inputs.source_branch_name }})
+        arguments.append("--target-branch")
+        arguments.append(${{ inputs.target_branch_name }})
+        arguments.append("--registry-secrets")
+        arguments.append(${{ inputs.registry_secrets }})
+        arguments.append("--working-directory")
+        arguments.append(${{ inputs.working_directory }})
+        arguments.append("--default-registry-domain")
+        arguments.append(${{ inputs.default_registry_domain }})
+        python $file $arguments.join(" ")
+
     - name: Push changes
       if: ${{ inputs.push_changes == 'true' }}
       shell: bash

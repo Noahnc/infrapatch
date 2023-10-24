@@ -8,13 +8,22 @@ from rich import progress
 from rich.console import Console
 from rich.table import Table
 
-import infrapatch_cli.constants as cs
-from infrapatch_cli.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources, ResourceStatus, \
+import infrapatch.core.constants as cs
+from infrapatch.core.credentials_helper import get_registry_credentials
+from infrapatch.core.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources, ResourceStatus, \
     from_terraform_resources_to_dict_list
-from infrapatch_cli.utils.hcl_edit_cli import HclEditCliException
-from infrapatch_cli.utils.hcl_handler import HclHandler
-from infrapatch_cli.utils.registry_handler import RegistryHandler
+from infrapatch.core.utils.hcl_edit_cli import HclEditCliException, HclEditCli
+from infrapatch.core.utils.hcl_handler import HclHandler
+from infrapatch.core.utils.registry_handler import RegistryHandler
 
+
+def build_main_handler(default_registry_domain: str, credentials_file_path: str = None, credentials_dict: dict = None):
+    hcl_edit_cli = HclEditCli()
+    hcl_handler = HclHandler(hcl_edit_cli)
+    if credentials_dict is None:
+        credentials_dict = get_registry_credentials(hcl_handler, credentials_file_path)
+    registry_handler = RegistryHandler(default_registry_domain, credentials_dict)
+    return MainHandler(hcl_handler, registry_handler)
 
 class MainHandler:
     def __init__(self, hcl_handler: HclHandler, registry_handler: RegistryHandler):
