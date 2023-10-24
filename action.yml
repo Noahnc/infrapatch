@@ -50,6 +50,7 @@ runs:
     - name: Run InfraPatch Action
       shell: bash
       run: |
+        ls -la ${{ inputs.working_directory }}
         module="infrapatch.action"
         arguments=()
         if [ "${{ runner.debug }}" == "1" ]; then
