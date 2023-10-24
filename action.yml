@@ -58,10 +58,12 @@ runs:
         if [ "${{ inputs.report_only }}" == "true" ]; then
             arguments+=("--report-only")
         fi
+        if [ "${{ inputs.registry_secrets }}" != "" ]; then
+            arguments+=("--registry-secrets-string" "\"${{ inputs.registry_secrets }}\"")
+        fi
         arguments+=("--github-token" "\"${{ inputs.github_token }}\"")
         arguments+=("--source-branch" "\"${{ inputs.source_branch_name }}\"")
         arguments+=("--target-branch" "\"${{ inputs.target_branch_name }}\"")
-        arguments+=("--registry-secrets-string" "${{ inputs.registry_secrets }}")
         arguments+=("--working-directory" "\"${{ inputs.working_directory }}\"")
         arguments+=("--default-registry-domain" "\"${{ inputs.default_registry_domain }}\"")
         python -m "$module" "${arguments[@]}"

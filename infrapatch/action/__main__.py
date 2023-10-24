@@ -11,7 +11,7 @@ from git import Repo
 @click.group(invoke_without_command=True)
 @click.option("--debug", is_flag=True, help="Enable debug logging.")
 @click.option("--default-registry-domain")
-@click.option("--registry-secrets-string")
+@click.option("--registry-secrets-string", default=None)
 @click.option("--source-branch")
 @click.option("--target-branch")
 @click.option("--github-token")
@@ -22,8 +22,9 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
          working_directory: str):
 
     setup_logging(debug)
-
-    main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=get_credentials_from_string(registry_secrets_string))
+    if registry_secrets_string is not None:
+        credentials = get_credentials_from_string(registry_secrets_string)
+    main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=credentials)
     resources = main_handler.get_all_terraform_resources(Path(working_directory))
 
     if report_only:
