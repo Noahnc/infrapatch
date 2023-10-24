@@ -45,5 +45,6 @@ runs:
         github_token: ${{ inputs.github_token }}
     - name: Push changes
       if: ${{ inputs.push_changes == 'true' }}
+      shell: bash
       run: |
         git push
