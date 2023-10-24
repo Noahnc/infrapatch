@@ -64,7 +64,7 @@ runs:
         arguments+=("--registry-secrets" "${{ inputs.registry_secrets }}")
         arguments+=("--working-directory" "${{ inputs.working_directory }}")
         arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
-        //python -m "$module" "${arguments[@]}"
+        #python -m "$module" "${arguments[@]}"
         python -m "$module" "--help
 
     - name: Push changes
