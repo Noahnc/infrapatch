@@ -1,0 +1,13 @@
+name: InfraPatch Github Action
+author: "Noah Canadea"
+inputs:
+  target_branch:
+    description: "Target branch to create a pull request against"
+    required: true
+    default: "main"
+  registry_secrets:
+    description: "Registry secrets to use for private registries"
+    required: true
+runs:
+  using: node20
+  main: index.js

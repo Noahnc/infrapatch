@@ -1,6 +1,30 @@
 name: InfraPatch Github Action
 description: A github action to update provider and module dependencies in terraform files
 author: "Noah Canadea"
+inputs:
+  target_branch:
+    description: "Target branch to create a pull request against"
+    required: true
+    default: "main"
+  push_changes:
+    description: "Push changes to the target branch. Defaults to true"
+    required: false
+    default: true
+  github_token:
+    description: "GitHub access token. Defaults to github.token."
+    default: ${{ github.token }}
+  command:
+    description: "The CLI Command to run, can be either report or update. Defaults to update"
+    default: "update"
+    required: true
+  patch_branch_name:
+    description: "Name of the branch where changes will be pushed to. Defaults to feature/infra-patch"
+    required: true
+    default: "feature/infra-patch"
+  registry_secrets:
+    description: "Registry secrets to use for private registries"
+    required: false
+    default: ""
 runs:
   using: composite
   steps:
@@ -11,3 +35,15 @@ runs:
     - name: Install infrapatch
       run: pip install .
       shell: bash
+    - name: Run infrapatch
+      uses: ./action/infrapatch.yml
+      with:
+        target_branch: ${{ inputs.target_branch }}
+        registry_secrets: ${{ inputs.registry_secrets }}
+        command: ${{ inputs.command }}
+        patch_branch_name: ${{ inputs.patch_branch_name }}
+        github_token: ${{ inputs.github_token }}
+    - name: Push changes
+      if: ${{ inputs.push_changes == 'true' }}
+      run: |
+        git push
