@@ -65,7 +65,7 @@ runs:
         arguments+=("--github-token" "\"${{ inputs.github_token }}\"")
         arguments+=("--source-branch" "\"${{ inputs.source_branch_name }}\"")
         arguments+=("--target-branch" "\"${{ inputs.target_branch_name }}\"")
-        arguments+=("--working-directory" "\"${{ inputs.working_directory }}\"")
+        arguments+=("--working-directory" "${{ inputs.working_directory }}")
         arguments+=("--default-registry-domain" "\"${{ inputs.default_registry_domain }}\"")
         python -m "$module" "${arguments[@]}"
 

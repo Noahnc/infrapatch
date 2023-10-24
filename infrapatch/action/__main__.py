@@ -22,6 +22,15 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
          working_directory: str):
 
     setup_logging(debug)
+    log.debug(f"Running infrapatch with the following parameters: "
+              f"default_registry_domain={default_registry_domain}, "
+              f"registry_secrets_string={registry_secrets_string}, "
+              f"source_branch={source_branch}, "
+              f"target_branch={target_branch}, "
+              f"github_token={github_token}, "
+              f"report_only={report_only}, "
+              f"working_directory={working_directory}"
+              )
     credentials = {}
     if registry_secrets_string is not None:
         credentials = get_credentials_from_string(registry_secrets_string)

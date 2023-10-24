@@ -76,7 +76,7 @@ class HclHandler:
             return found_resources
 
     def get_all_terraform_files(self, root: Path = None) -> list[Path]:
-        if not root.exists():
+        if not root.is_dir():
             raise Exception(f"Path '{root}' is not a directory.")
         search_string = "*.tf"
         if root is not None:
