@@ -9,7 +9,7 @@ inputs:
   push_changes:
     description: "Push changes to the target branch. Defaults to true"
     required: false
-    default: true
+    default: "true"
   github_token:
     description: "GitHub access token. Defaults to github.token."
     default: ${{ github.token }}
@@ -35,11 +35,8 @@ runs:
     - name: Install infrapatch
       run: pip install .
       shell: bash
-    - name: print dir
-      run: ls -la
-      shell: bash
     - name: Run infrapatch
-      uses: ./action/infrapatch.yml
+      uses: ./action/
       with:
         target_branch: ${{ inputs.target_branch }}
         registry_secrets: ${{ inputs.registry_secrets }}
