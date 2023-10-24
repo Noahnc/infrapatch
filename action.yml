@@ -35,6 +35,9 @@ runs:
     - name: Install infrapatch
       run: pip install .
       shell: bash
+    - name: print dir
+      run: ls -la
+      shell: bash
     - name: Run infrapatch
       uses: ./action/infrapatch.yml
       with:
