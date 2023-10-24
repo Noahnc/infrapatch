@@ -19,4 +19,4 @@ inputs:
     required: true
 runs:
   using: node20
-  main: ./action/index.js
+  main: index.js
