@@ -23,7 +23,7 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
     setup_logging(debug)
 
     main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=get_credentials_from_string(registry_secrets_string))
-    resources = main_handler.get_all_terraform_resources(Path(project_root))
+    resources = main_handler.get_all_terraform_resources(Path(working_directory))
 
     if report_only:
         main_handler.print_resource_table(resources)
