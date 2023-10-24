@@ -65,7 +65,7 @@ runs:
         arguments+=("--working-directory" "${{ inputs.working_directory }}")
         arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         #python -m "$module" "${arguments[@]}"
-        python -m "$module" "--help
+        python -m "$module" "--help"
 
     - name: Push changes
       if: ${{ inputs.push_changes == 'true' }}
