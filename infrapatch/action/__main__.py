@@ -22,6 +22,7 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
          working_directory: str):
 
     setup_logging(debug)
+    credentials = {}
     if registry_secrets_string is not None:
         credentials = get_credentials_from_string(registry_secrets_string)
     main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=credentials)
