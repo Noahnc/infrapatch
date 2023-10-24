@@ -9,6 +9,7 @@ The follwoing chapter describes the CLI usage.
 
 ### Installation
 
+Before installing the CLI, make sure you have Python 3.11 or higher installed.
 The InfraPatch CLI can be installed via pip:
 
 ```bash

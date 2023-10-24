@@ -15,3 +15,5 @@ jobs:
 
       - name: Run InfraPatch Action
         uses: ./
+        with:
+          push_changes: false
