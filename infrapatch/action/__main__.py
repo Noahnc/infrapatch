@@ -16,10 +16,10 @@ from git import Repo
 @click.option("--target-branch")
 @click.option("--github-token")
 @click.option("--report-only", is_flag=True)
-@click.option("--project-root")
+@click.option("--working-directory")
 @catch_exception(handle=Exception)
-def main(debug: bool, version: bool, default_registry_domain: str, registry_secrets_string: str, source_branch: str, target_branch: str, github_token: str, report_only: bool,
-         project_root: str):
+def main(debug: bool, default_registry_domain: str, registry_secrets_string: str, source_branch: str, target_branch: str, github_token: str, report_only: bool,
+         working_directory: str):
     setup_logging(debug)
 
     main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=get_credentials_from_string(registry_secrets_string))
@@ -53,8 +53,6 @@ def main(debug: bool, version: bool, default_registry_domain: str, registry_secr
     # if repo.heads[source_branch].commit != repo.heads[target_branch].commit:
     #     # rebase the target branch from the source branch
     #     repo.git.rebase(source_branch)
-
-
 
 
 def get_credentials_from_string(credentials_string: str) -> dict:
