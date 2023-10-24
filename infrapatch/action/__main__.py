@@ -9,7 +9,7 @@ from git import Repo
 
 
 @click.group(invoke_without_command=True)
-@click.option("--debug", is_flag=True, help="Enable debug logging.")
+@click.option("--debug", is_flag=True)
 @click.option("--default-registry-domain")
 @click.option("--registry-secrets-string", default=None)
 @click.option("--source-branch")
@@ -39,6 +39,7 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
 
     if report_only:
         main_handler.print_resource_table(resources)
+        log.info("Report only mode is enabled. No changes will be applied.")
         return
 
     upgradable_resources = get_upgradable_resources(resources)

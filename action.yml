@@ -23,7 +23,7 @@ inputs:
     default: ${{ github.token }}
   report_only:
     description: "Only report new versions. Do not update files. Defaults to false"
-    default: "true"
+    default: "false"
     required: true
   registry_secrets:
     description: "Registry secrets to use for private registries"
@@ -50,7 +50,6 @@ runs:
     - name: Run InfraPatch Action
       shell: bash
       run: |
-        ls -la ${{ inputs.working_directory }}
         module="infrapatch.action"
         arguments=()
         if [ "${{ runner.debug }}" == "1" ]; then
