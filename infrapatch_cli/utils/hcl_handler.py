@@ -9,6 +9,10 @@ from infrapatch_cli.utils.hcl_edit_cli import HclEditCli
 from infrapatch_cli.models.versioned_terraform_resources import TerraformModule, TerraformProvider, VersionedTerraformResource
 
 
+class HclParserException(BaseException):
+    pass
+
+
 class HclHandler:
     def __init__(self, hcl_edit_cli: HclEditCli):
         self.hcl_edit_cli = hcl_edit_cli
@@ -23,11 +27,13 @@ class HclHandler:
             log.debug(f"Resource '{resource.name}' is already up to date.")
             return
 
-        log.info(f"Updating resource '{type(resource)}' with name '{resource.name}' from version '{resource.current_version}' to '{resource.newest_version}'.")
+        log.debug(f"Updating resource '{resource.resource_name}' with name '{resource.name}' from version '{resource.current_version}' to '{resource.newest_version}'.")
         if isinstance(resource, TerraformProvider):
             resource_name = f"terraform.required_providers.{resource.name}.version"
         elif isinstance(resource, TerraformModule):
             resource_name = f"module.{resource.name}.version"
+        else:
+            raise Exception(f"Resource type '{type(resource)}' is not supported.")
 
         self.hcl_edit_cli.update_hcl_value(resource_name, resource.source_file, resource.newest_version)
 
@@ -40,7 +46,7 @@ class HclHandler:
             try:
                 terraform_file_dict = pygohcl.loads(file.read())
             except Exception as e:
-                raise Exception(f"Could not parse file '{tf_file}': {e}")
+                raise HclParserException(f"Could not parse file '{tf_file}': {e}")
             found_resources = []
             if "terraform" in terraform_file_dict:
                 if "required_providers" in terraform_file_dict["terraform"]:

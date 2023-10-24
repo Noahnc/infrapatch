@@ -17,7 +17,7 @@ class VersionedTerraformResource:
     name: str
     current_version: str
     source_file: Path
-    newest_version: str = None
+    newest_version: Optional[str] = None
     _status: str = ResourceStatus.UNPATCHED
     _base_domain: str = None
     _identifier: str = None
@@ -147,5 +147,5 @@ def get_upgradable_resources(resources: list[VersionedTerraformResource]) -> lis
     return [resource for resource in resources if not resource.check_if_up_to_date()]
 
 
-def from_terraform_resources_to_dict_list(dataclass_list: list[VersionedTerraformResource]) -> list[dict]:
-    return [dataclass.__to_dict__() for dataclass in dataclass_list]
+def from_terraform_resources_to_dict_list(terraform_resources: list[VersionedTerraformResource]) -> list[dict]:
+    return [terraform_resource.__to_dict__() for terraform_resource in terraform_resources]

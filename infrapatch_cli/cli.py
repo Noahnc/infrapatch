@@ -34,6 +34,7 @@ def catch_exception(func=None, *, handle):
         except KeyboardInterrupt:
             log.error("Command was interrupted, exiting.")
             exit(2)
+
     return wrapper
 
 
@@ -88,13 +89,14 @@ def main(debug: bool, version: bool, credentials_file_path: str, default_registr
     debug_exception = debug
 
 
+# noinspection PyUnresolvedReferences
 @main.command()
 @click.option("project_root", "--project-root", default=None, help="Root directory of the project. If not specified, the current working directory is used.")
 @click.option("--only-upgradable", is_flag=True, help="Only show providers and modules that can be upgraded.")
 @click.option("--dump-json-statistics", is_flag=True, help="Creates a json file containing statistics about the found resources and there update status as json file in the cwd.")
 @catch_exception(handle=Exception)
-def list(project_root: str, only_upgradable: bool, dump_json_statistics: bool):
-    """Finds all modules and providers in the project_root and prints there newest version."""
+def report(project_root: str, only_upgradable: bool, dump_json_statistics: bool):
+    """Finds all modules and providers in the project_root and prints the newest version."""
     if project_root is None: project_root = Path.cwd()
     global composition
     resources = composition.get_all_terraform_resources(Path(project_root))
@@ -103,13 +105,14 @@ def list(project_root: str, only_upgradable: bool, dump_json_statistics: bool):
 
 
 @main.command()
-@click.option("project_root", "--project-root", default=None, help="Root directory of the project. If not specified, the current working directory is used.")
+@click.option("project_root", "--project-root", default=None, help="Root directory of the project. If not specified, the current working directory is used. If commit-changes is set, this has to be the root of a git repository.")
 @click.option("--confirm", is_flag=True, help="Apply changes without confirmation.")
 @click.option("--dump-json-statistics", is_flag=True, help="Creates a json file containing statistics about the updated resources in the cwd.")
+@click.option("--commit-changes", is_flag=True, help="Commits the changes to a git repository.")
 @catch_exception(handle=Exception)
-def update(project_root: str, confirm: bool, dump_json_statistics: bool):
+def update(project_root: str, confirm: bool, dump_json_statistics: bool, commit_changes: bool):
     if project_root is None: project_root = Path.cwd()
     global composition
     resources = composition.get_all_terraform_resources(Path(project_root))
-    composition.update_resources(resources, confirm)
+    composition.update_resources(resources, confirm, Path(project_root), commit_changes)
     composition.dump_statistics(resources, dump_json_statistics)

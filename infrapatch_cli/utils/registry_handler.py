@@ -7,6 +7,16 @@ from urllib.parse import urlparse
 from infrapatch_cli.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider
 
 
+class RegistryNotFoundException(BaseException):
+    pass
+
+class RegistryMetadataException(BaseException):
+    pass
+
+class ResourceNotFoundException(BaseException):
+    pass
+
+
 class RegistryHandler:
     def __init__(self, default_registry_domain: str, credentials: dict):
         self.default_registry_domain = default_registry_domain
@@ -58,11 +68,16 @@ class RegistryHandler:
             request_object.add_header("Authorization", f"Bearer {token}")
         except KeyError:
             log.debug(f"No credentials found for registry '{registry_base_domain}', using unauthenticated request.")
-        response = request.urlopen(request_object).read()
+        response = request.urlopen(request_object)
+        if response.status == 404:
+            raise ResourceNotFoundException(f"Resource '{resource.name}' not found in registry '{registry_base_domain}'.")
+        elif response.status >= 400:
+            raise RegistryMetadataException(f"Could not get versions from '{version_endpoint}'.")
+        response_data = json.loads(response.read())
         if isinstance(resource, TerraformModule):
-            versions = json.loads(response)["modules"][0]["versions"]
+            versions = response_data["modules"][0]["versions"]
         elif isinstance(resource, TerraformProvider):
-            versions = json.loads(response)["versions"]
+            versions = response_data["versions"]
         else:
             raise Exception(f"Resource type '{type(resource)}' is not supported.")
         sorted_versions = sorted(versions, key=lambda k: StrictVersion(k["version"]), reverse=True)
@@ -81,7 +96,11 @@ class RegistryHandler:
             return self.cached_registry_metadata[registry_base_domain]
         discovery_url = f"https://{registry_base_domain}/.well-known/terraform.json"
         log.debug(f"Getting registry metadata from {discovery_url}")
-        response = request.urlopen(discovery_url).read()
-        metadata = json.loads(response)
+        response = request.urlopen(discovery_url)
+        if response.status == 404:
+            raise RegistryNotFoundException(f"Registry '{registry_base_domain}' not found.")
+        elif response.status >= 400:
+            raise RegistryMetadataException(f"Could not get registry metadata from '{discovery_url}'.")
+        metadata = json.loads(response.read())
         self.cached_registry_metadata[registry_base_domain] = metadata
         return metadata

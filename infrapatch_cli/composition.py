@@ -3,32 +3,33 @@ import logging as log
 from pathlib import Path
 
 import click
+from git import Repo
+from rich import progress
 from rich.console import Console
 from rich.table import Table
 
 import infrapatch_cli.constants as cs
+from infrapatch_cli.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources, ResourceStatus, \
+    from_terraform_resources_to_dict_list
+from infrapatch_cli.utils.hcl_edit_cli import HclEditCliException
 from infrapatch_cli.utils.hcl_handler import HclHandler
-from infrapatch_cli.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources, ResourceStatus, from_terraform_resources_to_dict_list
 from infrapatch_cli.utils.registry_handler import RegistryHandler
 
 
-class HclCliException:
-    pass
-
-
-class MainHandler():
+class MainHandler:
     def __init__(self, hcl_handler: HclHandler, registry_handler: RegistryHandler):
         self.hcl_handler = hcl_handler
         self.registry_handler = registry_handler
 
     def get_all_terraform_resources(self, project_root: Path) -> list[VersionedTerraformResource]:
+        log.info(f"Searching for .tf files in {project_root.absolute().as_posix()} ...")
         terraform_files = self.hcl_handler.get_all_terraform_files(project_root)
         if len(terraform_files) == 0:
             return []
         resources = []
-        for terraform_file in terraform_files:
+        for terraform_file in progress.track(terraform_files, description="Parsing .tf files..."):
             resources.extend(self.hcl_handler.get_terraform_resources_from_file(terraform_file))
-        for resource in resources:
+        for resource in progress.track(resources, description="Getting newest resource versions..."):
             resource.set_newest_version(self.registry_handler.get_newest_version(resource))
         return resources
 
@@ -65,24 +66,32 @@ class MainHandler():
         else:
             print("No providers found.")
 
-    def update_resources(self, resources: list[VersionedTerraformResource], confirm: bool) -> list[VersionedTerraformResource]:
+    # noinspection PyUnboundLocalVariable
+    def update_resources(self, resources: list[VersionedTerraformResource], confirm: bool, working_dir: Path, commit_changes: bool = False) -> list[VersionedTerraformResource]:
         upgradable_resources = get_upgradable_resources(resources)
         if len(upgradable_resources) == 0:
             log.info("All resources are up to date, nothing to do.")
-            return
+            return []
+        if commit_changes:
+            repo = Repo(working_dir.absolute().as_posix())
+            if repo.bare:
+                raise Exception("Working directory is not a git repository.")
+            log.info(f"Committing changes to git branch '{repo.active_branch.name}'.")
         if not confirm:
             self.print_resource_table(resources, True)
             if not click.confirm("Do you want to apply the changes?"):
                 print("Aborting...")
-                return
-        for resource in upgradable_resources:
-            log.info(f"Updating '{resource.resource_name}' with name '{resource.name}' from version '{resource.current_version}' to '{resource.newest_version}'.")
+                return []
+        for resource in progress.track(upgradable_resources, description="Updating resource versions..."):
             try:
                 self.hcl_handler.bump_resource_version(resource)
-            except HclCliException as e:
+            except HclEditCliException as e:
                 log.error(f"Could not update resource '{resource.name}': {e}")
                 resource.set_patch_error()
                 continue
+            if commit_changes:
+                repo.index.add([resource.source_file.absolute().as_posix()])
+                repo.index.commit(f"Updated {resource.resource_name} '{resource.name}' from version '{resource.current_version}' to '{resource.newest_version}'.")
             resource.set_patched()
         return upgradable_resources
 
