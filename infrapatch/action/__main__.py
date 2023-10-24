@@ -11,18 +11,18 @@ from git import Repo
 @click.group(invoke_without_command=True)
 @click.option("--debug", is_flag=True, help="Enable debug logging.")
 @click.option("--default-registry-domain")
-@click.option("--credentials-string")
+@click.option("--registry-secrets-string")
 @click.option("--source-branch")
 @click.option("--target-branch")
 @click.option("--github-token")
 @click.option("--report-only", is_flag=True)
 @click.option("--project-root")
 @catch_exception(handle=Exception)
-def main(debug: bool, version: bool, default_registry_domain: str, credentials_string: str, source_branch: str, target_branch: str, github_token: str, report_only: bool,
+def main(debug: bool, version: bool, default_registry_domain: str, registry_secrets_string: str, source_branch: str, target_branch: str, github_token: str, report_only: bool,
          project_root: str):
     setup_logging(debug)
 
-    main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=get_credentials_from_string(credentials_string))
+    main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=get_credentials_from_string(registry_secrets_string))
     resources = main_handler.get_all_terraform_resources(Path(project_root))
 
     if report_only:

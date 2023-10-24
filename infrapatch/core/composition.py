@@ -25,6 +25,7 @@ def build_main_handler(default_registry_domain: str, credentials_file_path: str 
     registry_handler = RegistryHandler(default_registry_domain, credentials_dict)
     return MainHandler(hcl_handler, registry_handler)
 
+
 class MainHandler:
     def __init__(self, hcl_handler: HclHandler, registry_handler: RegistryHandler):
         self.hcl_handler = hcl_handler
