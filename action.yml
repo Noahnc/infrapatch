@@ -50,7 +50,7 @@ runs:
     - name: Run InfraPatch Action
       shell: bash
       run: |
-        file = "./infrapatch/action/__main__.py"
+        file="./infrapatch/action/__main__.py"
         arguments=()
         if [ "${{ runner.debug }}" == "1" ]; then
             arguments+=("--debug")
@@ -68,7 +68,7 @@ runs:
         arguments+=("--working-directory" "${{ inputs.working_directory }}")
         arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         echo "Running command: python $file ${arguments[@]}"
-        python $file "${arguments[@]}"
+        python "$file" "${arguments[@]}"
 
     - name: Push changes
       if: ${{ inputs.push_changes == 'true' }}
