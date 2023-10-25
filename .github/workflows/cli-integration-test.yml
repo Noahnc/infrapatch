@@ -41,7 +41,7 @@ jobs:
 
       - name: Run InfraPatch report
         shell: bash
-        run: infrapatch --debug report
+        run: infrapatch --debug report --dump-json-statistics
 
       - name: Check report result
         shell: pwsh
