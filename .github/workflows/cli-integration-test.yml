@@ -53,3 +53,26 @@ jobs:
           if ( $report.resources_patched -ne 0 ) {
               throw "No resources should be patched"
           }
+          if ( $report.errors -gt 0 ) {
+              throw "Errors have been detected"
+          }
+
+      - name: Run InfraPatch report
+        shell: bash
+        run: infrapatch --debug update --dump-json-statistics
+
+      - name: Check report result
+        shell: pwsh
+        run: |
+          $report = Get-Content $env:report_json_file -Raw | ConvertFrom-Json
+          if ( -not $report.total_resources -gt 0 ) {
+            throw "Failed to get resources"
+          }
+          if ( $report.resources_patched -gt 2 ) {
+              throw "No resources should be patched"
+          }
+          if ( $report.errors -gt 0 ) {
+              throw "Errors have been detected"
+          }
+          
+          
