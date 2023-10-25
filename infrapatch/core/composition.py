@@ -40,7 +40,7 @@ class MainHandler:
         for terraform_file in progress.track(terraform_files, description="Parsing .tf files..."):
             resources.extend(self.hcl_handler.get_terraform_resources_from_file(terraform_file))
         for resource in progress.track(resources, description="Getting newest resource versions..."):
-            resource.set_newest_version(self.registry_handler.get_newest_version(resource))
+            resource.newest_version = self.registry_handler.get_newest_version(resource)
         return resources
 
     def print_resource_table(self, resources: list[VersionedTerraformResource], only_upgradable: bool = False):

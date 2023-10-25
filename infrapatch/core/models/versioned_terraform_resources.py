@@ -1,7 +1,7 @@
 import logging as log
 import re
+import semantic_version
 from dataclasses import dataclass
-from distutils.version import StrictVersion
 from pathlib import Path
 from typing import Optional
 
@@ -17,7 +17,7 @@ class VersionedTerraformResource:
     name: str
     current_version: str
     source_file: Path
-    newest_version: Optional[str] = None
+    _newest_version: Optional[str] = None
     _status: str = ResourceStatus.UNPATCHED
     _base_domain: str = None
     _identifier: str = None
@@ -43,21 +43,59 @@ class VersionedTerraformResource:
     def identifier(self) -> str:
         return self._identifier
 
-    def set_newest_version(self, version: str):
-        self.newest_version = version
+    @property
+    def newest_version(self) -> Optional[str]:
+        return self._newest_version
+
+    @property
+    def newest_version_base(self):
+        if self.has_tile_constraint():
+            return self.newest_version.strip("~>")
+        return self.newest_version
+
+    @newest_version.setter
+    def newest_version(self, version: str):
+        if self.has_tile_constraint():
+            self._newest_version = f"~>{version}"
+            return
+        self._newest_version = version
 
     def set_patched(self):
         self._status = ResourceStatus.PATCHED
+
+    def has_tile_constraint(self):
+        return re.match(r"^~>[0-9]+\.[0-9]+\.[0-9]+$", self.current_version)
 
     def set_patch_error(self):
         self._status = ResourceStatus.PATCH_ERROR
 
     def installed_version_equal_or_newer_than_new_version(self):
+
         if self.newest_version is None:
             raise Exception(f"Newest version of resource '{self.name}' is not set.")
-        if StrictVersion(self.newest_version) > StrictVersion(self.current_version):
+
+        newest = semantic_version.Version(self.newest_version_base)
+
+        # check if the current version has the following format: "1.2.3"
+        if re.match(r"^[0-9]+\.[0-9]+\.[0-9]+$", self.current_version):
+            current = semantic_version.Version(self.current_version)
+            if current >= newest:
+                return True
             return False
-        return True
+
+        # chech if the current version has the following format: "~>3.76.0"
+        if self.has_tile_constraint():
+            current = semantic_version.Version(self.current_version.strip("~>"))
+            if current.major > newest.major:
+                return True
+            if current.minor >= newest.minor:
+                return True
+            return False
+
+        current_constraint = semantic_version.NpmSpec(self.current_version)
+        if newest in current_constraint:
+            return True
+        return False
 
     def check_if_up_to_date(self):
         if self.status == ResourceStatus.PATCH_ERROR:

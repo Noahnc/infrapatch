@@ -18,7 +18,8 @@ setup(
         "rich~=13.6.0",
         "pygohcl~=1.0.7",
         "GitPython~=3.1.40",
-        "setuptools~=65.5.1"
+        "setuptools~=65.5.1",
+        "semantic_version~=2.10.0"
     ],
     python_requires='>=3.11',
     entry_points='''
