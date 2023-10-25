@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from infrapatch.__init__ import __version__
+from infrapatch.cli.__init__ import __version__
 
 setup(
     name='infrapatch',
