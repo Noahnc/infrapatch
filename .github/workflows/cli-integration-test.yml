@@ -47,9 +47,9 @@ jobs:
         shell: pwsh
         run: |
           $report = Get-Content $env:report_json_file -Raw | ConvertFrom-Json
-          if ( -not $report.total_resources > 0 ) {
+          if ( -not $report.total_resources -gt 0 ) {
             throw "Failed to get resources"
           }
-          if ( $report.resources_patched != 0 ) {
+          if ( $report.resources_patched -ne 0 ) {
               throw "No resources should be patched"
           }
