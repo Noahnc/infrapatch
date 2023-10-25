@@ -1,0 +1,55 @@
+name: Build and Release
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+    branches:
+      - main
+
+jobs:
+  test:
+    # only run if not closed or closed with merge
+    if: ${{ github.event.pull_request.merged == true || github.event.pull_request.state != 'closed' }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      report_json_file: InfraPatch_Statistics.json
+
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+          - macos-latest
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install InfraPatch CLI
+        run: |
+          python -m pip install .
+        shell: bash
+
+      - name: Run InfraPatch report
+        shell: bash
+        run: infrapatch --debug report
+
+      - name: Check report result
+        shell: powershell
+        run: |
+          $report = Get-Content $env:report_json_file -Raw | ConvertFrom-Json
+          if ( -not $report.total_resources > 0 ) {
+            throw "Failed to get resources"
+          }
+          if ( $report.resources_patched != 0 ) {
+              throw "No resources should be patched"
+          }

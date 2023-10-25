@@ -13,7 +13,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Run InfraPatch Action
+      - name: Run in report only mode
         uses: ./
         with:
           push_changes: false
+          report_only: true
+
+      - name: Run in update mode
+        uses: ./
+        with:
+          push_changes: false
+          report_only: false
+          source_branch_name: "main"
+
+
+
+
+
+

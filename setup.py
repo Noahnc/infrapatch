@@ -17,12 +17,13 @@ setup(
         "click~=8.1.7",
         "rich~=13.6.0",
         "pygohcl~=1.0.7",
-        "GitPython~=3.1.40"
+        "GitPython~=3.1.40",
+        "setuptools~=65.5.1"
     ],
     python_requires='>=3.11',
     entry_points='''
         [console_scripts]
-        infrapatch=infrapatch.__main__:main
+        infrapatch=infrapatch.cli.__main__:main
     ''',
     author="Noah Canadea",
     url='https://github.com/Noahnc/infrapatch',
