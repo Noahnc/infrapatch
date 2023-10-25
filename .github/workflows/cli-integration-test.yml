@@ -21,9 +21,9 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-latest
           - macos-latest
           - ubuntu-latest
+          # - windows-latest Windows does currently not work because of pygohcl
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
