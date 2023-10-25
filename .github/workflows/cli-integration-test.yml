@@ -1,4 +1,4 @@
-name: Build and Release
+name: CLI Integration test
 
 on:
   pull_request:
@@ -59,7 +59,7 @@ jobs:
 
       - name: Run InfraPatch report
         shell: bash
-        run: infrapatch --debug update --dump-json-statistics
+        run: infrapatch --debug update --dump-json-statistics --confirm
 
       - name: Check report result
         shell: pwsh
