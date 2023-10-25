@@ -44,7 +44,7 @@ jobs:
         run: infrapatch --debug report
 
       - name: Check report result
-        shell: powershell
+        shell: pwsh
         run: |
           $report = Get-Content $env:report_json_file -Raw | ConvertFrom-Json
           if ( -not $report.total_resources > 0 ) {
