@@ -62,10 +62,10 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       with:
-        branch: 'refs/heads/${{ inputs.target_branch_name }}'
+        branch: "refs/heads/${{ inputs.target_branch_name }}"
 
     - name: Configure git
-      if : ${{ inputs.report_only }} == 'false' }}
+      if: ${{ inputs.report_only }} == 'false' }}
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
@@ -77,15 +77,14 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
-          git checkout "${{ inputs.target_branch_name }}"
+        git checkout "${{ inputs.target_branch_name }}"
 
     - name: Rebase target branch
-      if: ${{ create_branch.outputs.created == 'false' }}
+      if: ${{ steps.create_branch.outputs.created == 'false' }}
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
-          git pull --rebase origin "${{ inputs.target_branch_name }}"
-      
+        git pull --rebase origin "${{ inputs.target_branch_name }}"
 
     - name: Run InfraPatch Action
       shell: bash
