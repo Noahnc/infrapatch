@@ -4,7 +4,7 @@ from distutils.version import StrictVersion
 from urllib import request
 from urllib.parse import urlparse
 
-from infrapatch_cli.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider
+from infrapatch.core.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider
 
 
 class RegistryNotFoundException(BaseException):

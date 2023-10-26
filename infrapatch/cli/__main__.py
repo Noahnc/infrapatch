@@ -1,4 +1,4 @@
-from infrapatch_cli import cli
+from infrapatch.cli import cli
 
 
 def main():

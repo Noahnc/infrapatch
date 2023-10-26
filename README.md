@@ -9,6 +9,7 @@ The follwoing chapter describes the CLI usage.
 
 ### Installation
 
+Before installing the CLI, make sure you have Python 3.11 or higher installed.
 The InfraPatch CLI can be installed via pip:
 
 ```bash
@@ -22,6 +23,7 @@ After the installation, InfraPatch can be run with the following command:
 ```bash
 infrapatch --help
 ```
+![infrapatch_help.png](asset%2Finfrapatch_help.png)
 
 ### Usage
 
@@ -31,12 +33,14 @@ The `report` command will scan your Terraform code and report the current and ne
 ```bash
 infrapatch report
 ```
+![infrapatch_report.gif](asset%2Finfrapatch_report.gif)
 
 The `update` command will scan your Terraform code and ask you for confirmation to update the listed modules and providers to the newest version.
 
 ```bash
 infrapatch update
 ```
+![infrapatch_update.gif](asset%2Finfrapatch_update.gif)
 
 ### Authentication
 
@@ -66,7 +70,54 @@ infrapatch --credentials-file-path "path/to/credentials/file" update
 
 ### GitHub Action
 
-This repository also contains a GitHub Action that can be used to automatically update your Terraform code.
-The following example shows how to use the GitHub Action:
+This repository also contains a GitHub Action.
+The Action can for example be run on a schedule to automatically update your terraform code and open a PR with the changes.
 
+The following example workflow runs once a day:
+    
+```yaml
+name: "InfraPatch"
 
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  schedule:
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+
+jobs:
+  infrapatch:
+    name: "Check Terraform Code for Updates"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run in update mode
+        uses: Noahnc/infrapatch@main
+        with:
+          report_only: false 
+```
+
+#### Report only Mode
+
+By default, the Action will create a Branch with all the changes and opens a PR to Branch for which the Action was triggered.
+When setting the input `report_only` to `true`, the Action will only report available updates in the Action output.
+
+#### Authentication
+
+If you use private registries in your Terraform project, you can specify credentials for the Action with the Input `registry_secrets`:
+
+```yaml
+  - name: Run in update mode
+    uses: Noahnc/infrapatch@main
+    with:
+      report_only: false
+      registry_secrets: |
+        spacelift.io=${{ secrets.SPACELIFT_API_TOKEN }}
+        <second_registry>=<registry_token>
+```
+
+Each secret must be specified in a new line with the following format: `<registry_name>=<registry_token>`
