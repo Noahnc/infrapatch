@@ -2,10 +2,6 @@ name: InfraPatch Github Action
 description: A github action to update provider and module dependencies in terraform files
 author: "Noah Canadea"
 inputs:
-  head_branch_name:
-    description: "Source branch against which the PR will be created. Defaults to main"
-    required: true
-    default: ${{ github.ref_name }}
   target_branch_name:
     description: "Name of the branch where changes will be pushed to. Defaults to feature/infra-patch"
     required: true
@@ -44,6 +40,11 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Extract branch name
+      id: head_branch
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+
     - name: Install Python
       uses: actions/setup-python@v4
       with:
@@ -85,7 +86,7 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
-        git rebase -Xtheirs "origin/${{ inputs.head_branch_name }}"
+        git rebase -Xtheirs ${{ steps.head_branch.outputs.branch }}
 
     - name: Run InfraPatch Action
       shell: bash
