@@ -46,7 +46,7 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
         log.info("No upgradable resources found.")
         return
 
-    main_handler.update_resources(upgradable_resources, False, working_directory, True)
+    main_handler.update_resources(upgradable_resources, True, working_directory, True)
     main_handler.print_resource_table(upgradable_resources)
 
 
