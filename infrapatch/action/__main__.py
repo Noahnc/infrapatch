@@ -16,11 +16,9 @@ from pygit2 import Repository, Remote
 @click.option("--github-token")
 @click.option("--report-only", is_flag=True)
 @click.option("--working-directory")
-@click.option("--do-not-push", is_flag=True)
 @catch_exception(handle=Exception)
 def main(debug: bool, default_registry_domain: str, registry_secrets_string: str, github_token: str, report_only: bool,
-         working_directory: str,
-         do_not_push: bool):
+         working_directory: str):
     setup_logging(debug)
     log.debug(f"Running infrapatch with the following parameters: "
               f"default_registry_domain={default_registry_domain}, "

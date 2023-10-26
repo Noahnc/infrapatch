@@ -3,9 +3,9 @@ description: A github action to update provider and module dependencies in terra
 author: "Noah Canadea"
 inputs:
   target_branch_name:
-    description: "Name of the branch where changes will be pushed to. Defaults to feature/infra-patch"
+    description: "Name of the branch where changes will be pushed to. Defaults to feature/infrapatch-bot"
     required: true
-    default: "feature/infra-patch"
+    default: "feature/infrapatch-bot"
   default_registry_domain:
     description: "Default registry domain to use for modules and providers without explicit registry domain set. Defaults to registry.terraform.io"
     required: false
@@ -18,10 +18,6 @@ inputs:
     description: "Git email to use for commits. Defaults to bot@infrapatch.ch"
     required: false
     default: "bot@infrapatch.ch"
-  push_changes:
-    description: "Push changes to the target branch. Defaults to true"
-    required: false
-    default: "true"
   github_token:
     description: "GitHub access token. Defaults to github.token."
     default: ${{ github.token }}
@@ -89,6 +85,7 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
+        echo "Rebasing ${{ inputs.target_branch_name }} on ${{ steps.head_branch.outputs.branch }}"
         git rebase -Xtheirs ${{ steps.head_branch.outputs.branch }}
 
     - name: Run InfraPatch Action
@@ -111,7 +108,7 @@ runs:
         python -m "$module" "${arguments[@]}"
 
     - name: Push changes
-      if: ${{ inputs.push_changes == 'true' }}
+      if: ${{ inputs.report_only == 'false' }}
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
