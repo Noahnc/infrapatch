@@ -23,6 +23,7 @@ After the installation, InfraPatch can be run with the following command:
 ```bash
 infrapatch --help
 ```
+![infrapatch_help.png](asset%2Finfrapatch_help.png)
 
 ### Usage
 
