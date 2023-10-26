@@ -29,7 +29,6 @@ jobs:
         with:
           push_changes: false
           report_only: false
-          source_branch_name: "main"
 
 
 
