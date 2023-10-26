@@ -14,6 +14,14 @@ inputs:
     description: "Default registry domain to use for modules and providers without explicit registry domain set. Defaults to registry.terraform.io"
     required: false
     default: "registry.terraform.io"
+  git_user:
+    description: "Git user to use for commits. Defaults to InfraPatch Bot"
+    required: false
+    default: "InfraPatch Bot"
+  git_email:
+    description: "Git email to use for commits. Defaults to bot@infrapatch.ch"
+    required: false
+    default: "bot@infrapatch.ch"
   push_changes:
     description: "Push changes to the target branch. Defaults to true"
     required: false
@@ -47,6 +55,38 @@ runs:
         pip install -r requirements.txt
       shell: bash
 
+    - name: Create target branch
+      id: create_branch
+      if: ${{ inputs.report_only == 'false' }}
+      uses: peterjgrainger/action-create-branch@v2.2.0
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      with:
+        branch: 'refs/heads/${{ inputs.target_branch_name }}'
+
+    - name: Configure git
+      if : ${{ inputs.report_only }} == 'false' }}
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: |
+        git config --global user.name "${{ inputs.git_user }}"
+        git config --global user.email "${{ inputs.git_email }}"
+
+    - name: Switch to target branch
+      if: ${{ inputs.report_only == 'false' }}
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: |
+          git checkout "${{ inputs.target_branch_name }}"
+
+    - name: Rebase target branch
+      if: ${{ outputs.create_branch.created == 'false' }}
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: |
+          git pull --rebase origin "${{ inputs.target_branch_name }}"
+      
+
     - name: Run InfraPatch Action
       shell: bash
       run: |
@@ -70,6 +110,7 @@ runs:
 
     - name: Push changes
       if: ${{ inputs.push_changes == 'true' }}
+      working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
         git push
