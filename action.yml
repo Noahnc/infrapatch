@@ -112,5 +112,4 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
-        git pull
         git push

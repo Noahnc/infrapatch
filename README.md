@@ -40,6 +40,7 @@ The `update` command will scan your Terraform code and ask you for confirmation 
 ```bash
 infrapatch update
 ```
+![infrapatch_update.gif](asset%2Finfrapatch_update.gif)
 
 ### Authentication
 
