@@ -43,7 +43,10 @@ runs:
     - name: Extract branch name
       id: head_branch
       shell: bash
-      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+      run: |
+        head_branch="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        echo "Detected head branch: $head_branch"
+        echo "branch=$head_branch" >> $GITHUB_OUTPUT
 
     - name: Install Python
       uses: actions/setup-python@v4
