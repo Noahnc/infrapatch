@@ -44,6 +44,15 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Get current Head Branch
+      id: get_head_branch
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        head_branch=${git for-each-ref --format="%(upstream:short)" $(git symbolic-ref -q HEAD)}
+        echo "Current Head Branch: $head_branch"
+        echo "head_branch=$current_branch" >> "$GITHUB_OUTPUT"
+      shell: bash
+
     - name: Install Python
       uses: actions/setup-python@v4
       with:
@@ -85,7 +94,7 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
-        git pull --rebase origin "${{ inputs.target_branch_name }}"
+        git rebase -Xtheirs ${{ steps.get_head_branch.outputs.head_branch }}"
 
     - name: Run InfraPatch Action
       shell: bash
