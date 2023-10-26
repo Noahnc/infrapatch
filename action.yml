@@ -48,7 +48,7 @@ runs:
       id: get_head_branch
       working-directory: ${{ inputs.working_directory }}
       run: |
-        head_branch="origin/$GITHUB_REF_NAME"
+        head_branch="{git for-each-ref --format="%(upstream:short)" $(git symbolic-ref -q HEAD)}"
         echo "Current Head Branch: $head_branch"
         echo "head_branch=$current_branch" >> "$GITHUB_OUTPUT"
       shell: bash
