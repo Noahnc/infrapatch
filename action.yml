@@ -80,7 +80,7 @@ runs:
           git checkout "${{ inputs.target_branch_name }}"
 
     - name: Rebase target branch
-      if: ${{ outputs.create_branch.created == 'false' }}
+      if: ${{ create_branch.outputs.created == 'false' }}
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
