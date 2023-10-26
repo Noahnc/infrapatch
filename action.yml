@@ -44,7 +44,7 @@ runs:
       id: head_branch
       shell: bash
       run: |
-        head_branch="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        head_branch="origin/${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
         echo "Detected head branch: $head_branch"
         echo "branch=$head_branch" >> $GITHUB_OUTPUT
 
