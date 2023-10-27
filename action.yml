@@ -37,6 +37,14 @@ inputs:
     description: "Working directory to run the command in. Defaults to the root of the repository"
     required: false
     default: ${{ github.workspace }}
+outputs:
+  target_branch:
+    description: "Name of the branch where changes will be pushed to"
+    value: ${{ inputs.target_branch_name }}
+  pr_number:
+    description: "Number of the pull request that was created"
+    value: ${{ steps.statistics.outputs.pr_number }}
+
 runs:
   using: composite
   steps:
@@ -119,3 +127,10 @@ runs:
         arguments+=("--working-directory" "${{ inputs.working_directory }}")
         arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         python -m "$module" "${arguments[@]}"
+
+    - name: Get statistics
+      id: statistics
+      shell: pwsh
+      run: |
+        $report = Get-Content "return_values.json" -Raw | ConvertFrom-Json
+        Write-Output "pr_number=$($report.pull_number)" >> $GITHUB_OUTPUT

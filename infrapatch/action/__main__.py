@@ -1,8 +1,10 @@
+import json
 import subprocess
 from pathlib import Path
 import logging as log
 import click
 from github import Auth, Github
+from github.PullRequest import PullRequest
 
 from infrapatch.core.composition import build_main_handler
 from infrapatch.core.log_helper import catch_exception, setup_logging
@@ -52,6 +54,18 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
     main_handler.print_resource_table(upgradable_resources)
     main_handler.dump_statistics(upgradable_resources, save_as_json_file=True)
 
+    push_changes(target_branch, working_directory)
+
+    pull = create_pr(github_token, head_branch, repository_name, target_branch)
+    return_values = {"pr_number": pull.number}
+    return_value_file = Path("return_values.json")
+    if return_value_file.exists():
+        return_value_file.unlink()
+    with open(return_value_file, "w") as f:
+        f.write(json.dumps(return_values))
+
+
+def push_changes(target_branch, working_directory):
     command = ["git", "push", "-f", "-u", "origin", target_branch]
     log.debug(f"Executing command: {' '.join(command)}")
     try:
@@ -62,19 +76,17 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
         log.error(f"Stdout: {result.stdout}")
         raise Exception(f"Error pushing to remote: {result.stderr}")
 
-    create_pr(github_token, head_branch, repository_name, target_branch)
 
-
-def create_pr(github_token, head_branch, repository_name, target_branch):
+def create_pr(github_token, head_branch, repository_name, target_branch) -> PullRequest:
     token = Auth.Token(github_token)
     github = Github(auth=token)
     repo = github.get_repo(repository_name)
     pull = repo.get_pulls(state='open', sort='created', base=head_branch, head=target_branch)
     if pull.totalCount != 0:
         log.info(f"Pull request found from '{target_branch}' to '{head_branch}'")
-        return
+        return pull[0]
     log.info(f"No pull request found from '{target_branch}' to '{head_branch}'. Creating a new one.")
-    pull = repo.create_pull(title=f"InfraPatch Module and Provider Update", body=f"InfraPatch Module and Provider Update", base=head_branch, head=target_branch)
+    return repo.create_pull(title=f"InfraPatch Module and Provider Update", body=f"InfraPatch Module and Provider Update", base=head_branch, head=target_branch)
 
 
 def get_credentials_from_string(credentials_string: str) -> dict:
