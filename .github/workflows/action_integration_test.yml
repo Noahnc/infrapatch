@@ -21,14 +21,20 @@ jobs:
       - name: Run in report only mode
         uses: ./
         with:
-          push_changes: false
           report_only: true
 
       - name: Run in update mode
         uses: ./
         with:
-          push_changes: false
           report_only: false
+
+      - name: Delete PR and target_branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr close ${{ steps.create_branch.outputs.pr_number }}
+          gh branch delete ${{ steps.branch.outputs.target_branch }} --force
 
 
 
