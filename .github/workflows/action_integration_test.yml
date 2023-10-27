@@ -34,7 +34,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr close ${{ steps.update.outputs.pr_number }}
           gh branch delete ${{ steps.update.outputs.target_branch }} --force
 
 
