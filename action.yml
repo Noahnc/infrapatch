@@ -6,6 +6,10 @@ inputs:
     description: "Name of the branch where changes will be pushed to. Defaults to feature/infrapatch-bot"
     required: true
     default: "feature/infrapatch-bot"
+  repository_name:
+    description: "Name of the repository to run the action in. Defaults to the current repository"
+    required: false
+    default: ${{ github.repository }}
   default_registry_domain:
     description: "Default registry domain to use for modules and providers without explicit registry domain set. Defaults to registry.terraform.io"
     required: false
@@ -109,7 +113,9 @@ runs:
             arguments+=("--registry-secrets-string" "\"${{ inputs.registry_secrets }}\"")
         fi
         arguments+=("--github-token" "${{ inputs.github_token }}")
+        arguments+=("--head-branch" "${{ steps.branch.outputs.head }}")
         arguments+=("--target-branch" "${{ steps.branch.outputs.target }}")
+        arguments+=("--repository-name" "${{ inputs.repository_name }}")
         arguments+=("--working-directory" "${{ inputs.working_directory }}")
         arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         python -m "$module" "${arguments[@]}"
