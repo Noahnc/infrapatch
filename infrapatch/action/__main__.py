@@ -63,7 +63,7 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
         raise Exception(f"Error pushing to remote: {result.stderr}")
 
     token = Auth.Token(github_token)
-    github = Github(token)
+    github = Github(auth=token)
     repo = github.get_repo(repository_name)
     pull = repo.get_pulls(state='open', sort='created', base=head_branch, head=target_branch)
     if pull.totalCount != 0:
