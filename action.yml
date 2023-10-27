@@ -130,6 +130,7 @@ runs:
 
     - name: Get statistics
       id: statistics
+      if: ${{ inputs.report_only == 'false' }}
       shell: pwsh
       run: |
         $report = Get-Content "return_values.json" -Raw | ConvertFrom-Json
