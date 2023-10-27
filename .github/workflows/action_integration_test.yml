@@ -3,7 +3,6 @@ name: "GitHub Action integration test"
 permissions:
   contents: write
   pull-requests: write
-  repository-projects: read
 
 on:
   pull_request:
