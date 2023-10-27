@@ -91,7 +91,7 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
-        echo "Rebasing ${{ steps.branch.outputs.target }} on ${{ steps.branch.outputs.head }}"
+        echo "Rebasing ${{ steps.branch.outputs.target }} on ${{ steps.branch.outputs.head_origin }}"
         git rebase -Xtheirs ${{ steps.branch.outputs.head }}
 
     - name: Run InfraPatch Action
@@ -118,4 +118,4 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
-        git push -u origin "${{ steps.branch.outputs.target }}"
+        git push -f -u origin "${{ steps.branch.outputs.target }}"
