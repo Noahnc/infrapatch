@@ -6,6 +6,10 @@ inputs:
     description: "Name of the branch where changes will be pushed to. Defaults to feature/infrapatch-bot"
     required: true
     default: "feature/infrapatch-bot"
+  repository_name:
+    description: "Name of the repository to run the action in. Defaults to the current repository"
+    required: false
+    default: ${{ github.repository }}
   default_registry_domain:
     description: "Default registry domain to use for modules and providers without explicit registry domain set. Defaults to registry.terraform.io"
     required: false
@@ -33,16 +37,30 @@ inputs:
     description: "Working directory to run the command in. Defaults to the root of the repository"
     required: false
     default: ${{ github.workspace }}
+outputs:
+  target_branch:
+    description: "Name of the branch where changes will be pushed to"
+    value: ${{ inputs.target_branch_name }}
+  pr_number:
+    description: "Number of the pull request that was created"
+    value: ${{ steps.statistics.outputs.pr_number }}
+
 runs:
   using: composite
   steps:
     - name: Extract branch name
-      id: head_branch
+      id: branch
       shell: bash
       run: |
-        head_branch="origin/${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
-        echo "Detected head branch: $head_branch"
-        echo "branch=$head_branch" >> $GITHUB_OUTPUT
+        head_branch_origin="origin/${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        head_branch="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        target_branch="${{ inputs.target_branch_name }}"
+        target_branch_origin="origin/${{ inputs.target_branch_name }}"
+        echo "Using head branch $head_branch and target branch $target_branch"
+        echo "head=$head_branch" >> $GITHUB_OUTPUT
+        echo "head_origin=$head_branch_origin" >> $GITHUB_OUTPUT
+        echo "target=$target_branch" >> $GITHUB_OUTPUT
+        echo "target_origin=$target_branch_origin" >> $GITHUB_OUTPUT
 
     - name: Install Python
       uses: actions/setup-python@v4
@@ -78,15 +96,15 @@ runs:
       shell: bash
       run: |
         git fetch origin
-        git checkout -b "${{ inputs.target_branch_name }}" "origin/${{ inputs.target_branch_name }}"
+        git checkout -b "${{ steps.branch.outputs.target }}" "${{ steps.branch.outputs.target_origin }}"
 
     - name: Rebase target branch
       if: ${{ steps.create_branch.outputs.created == 'false' }}
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
-        echo "Rebasing ${{ inputs.target_branch_name }} on ${{ steps.head_branch.outputs.branch }}"
-        git rebase -Xtheirs ${{ steps.head_branch.outputs.branch }}
+        echo "Rebasing ${{ steps.branch.outputs.target }} on ${{ steps.branch.outputs.head_origin }}"
+        git rebase -Xtheirs ${{ steps.branch.outputs.head_origin }}
 
     - name: Run InfraPatch Action
       shell: bash
@@ -103,13 +121,19 @@ runs:
             arguments+=("--registry-secrets-string" "\"${{ inputs.registry_secrets }}\"")
         fi
         arguments+=("--github-token" "${{ inputs.github_token }}")
+        arguments+=("--head-branch" "${{ steps.branch.outputs.head }}")
+        arguments+=("--target-branch" "${{ steps.branch.outputs.target }}")
+        arguments+=("--repository-name" "${{ inputs.repository_name }}")
         arguments+=("--working-directory" "${{ inputs.working_directory }}")
         arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         python -m "$module" "${arguments[@]}"
 
-    - name: Push changes
+    - name: Get statistics
+      id: statistics
       if: ${{ inputs.report_only == 'false' }}
-      working-directory: ${{ inputs.working_directory }}
-      shell: bash
+      shell: pwsh
       run: |
-        git push
+        $report = Get-Content "return_values.json" -Raw | ConvertFrom-Json
+        $pr_number = $report.pull_number
+        Write-Host "Found PR $pr_number"
+        echo "pr_number=$pr_number" >> $GITHUB_OUTPUT
