@@ -109,13 +109,7 @@ runs:
             arguments+=("--registry-secrets-string" "\"${{ inputs.registry_secrets }}\"")
         fi
         arguments+=("--github-token" "${{ inputs.github_token }}")
+        arguments+=("--target-branch" "${{ steps.branch.outputs.target }}")
         arguments+=("--working-directory" "${{ inputs.working_directory }}")
         arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         python -m "$module" "${arguments[@]}"
-
-    - name: Push changes
-      if: ${{ inputs.report_only == 'false' }}
-      working-directory: ${{ inputs.working_directory }}
-      shell: bash
-      run: |
-        git push -f -u origin "${{ steps.branch.outputs.target }}"

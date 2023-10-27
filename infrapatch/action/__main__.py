@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 import logging as log
 import click
@@ -14,10 +15,11 @@ from pygit2 import Repository, Remote
 @click.option("--default-registry-domain")
 @click.option("--registry-secrets-string", default=None)
 @click.option("--github-token")
+@click.option("--target-branch")
 @click.option("--report-only", is_flag=True)
 @click.option("--working-directory")
 @catch_exception(handle=Exception)
-def main(debug: bool, default_registry_domain: str, registry_secrets_string: str, github_token: str, report_only: bool,
+def main(debug: bool, default_registry_domain: str, registry_secrets_string: str, github_token: str, target_branch: str, report_only: bool,
          working_directory: str):
     setup_logging(debug)
     log.debug(f"Running infrapatch with the following parameters: "
@@ -47,6 +49,16 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
     main_handler.update_resources(upgradable_resources, True, working_directory, True)
     main_handler.print_resource_table(upgradable_resources)
     main_handler.dump_statistics(upgradable_resources, save_as_json_file=True)
+
+    command = ["git", "push", "-f", "-u", "origin", target_branch]
+    log.debug(f"Executing command: {' '.join(command)}")
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, cwd=working_directory.absolute().as_posix())
+    except Exception as e:
+        raise Exception(f"Error pushing to remote: {e}")
+    if result.returncode != 0:
+        log.error(f"Stdout: {result.stdout}")
+        raise Exception(f"Error pushing to remote: {result.stderr}")
 
 
 def get_credentials_from_string(credentials_string: str) -> dict:
