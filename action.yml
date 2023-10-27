@@ -92,7 +92,7 @@ runs:
       shell: bash
       run: |
         echo "Rebasing ${{ steps.branch.outputs.target }} on ${{ steps.branch.outputs.head_origin }}"
-        git rebase -Xtheirs ${{ steps.branch.outputs.head }}
+        git rebase -Xtheirs ${{ steps.branch.outputs.head_origin }}
 
     - name: Run InfraPatch Action
       shell: bash
