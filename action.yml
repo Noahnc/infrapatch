@@ -134,4 +134,4 @@ runs:
       shell: pwsh
       run: |
         $report = Get-Content "return_values.json" -Raw | ConvertFrom-Json
-        Write-Output "pr_number=$($report.pull_number)" >> $GITHUB_OUTPUT
+        echo "pr_number=$($report.pull_number)" >> $GITHUB_OUTPUT
