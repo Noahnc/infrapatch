@@ -159,4 +159,4 @@ class MainHandler:
             str(statistics["modules_count"]),
             str(statistics["providers_count"])
         )
-        Console().print(table)
+        Console(width=cs.CLI_WIDTH).print(table)
