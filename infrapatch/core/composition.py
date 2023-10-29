@@ -112,13 +112,16 @@ class MainHandler:
                       title=title,
                       expand=True
                       )
-        table.add_column("Name")
-        table.add_column("Current Version")
-        table.add_column("Newest Version")
+        table.add_column("Name", overflow="fold")
+        table.add_column("Source", overflow="fold")
+        table.add_column("Current")
+        table.add_column("Newest")
         table.add_column("Upgradeable")
         for resource in resources:
+            name = resource.identifier if isinstance(resource, TerraformProvider) else resource.name
             table.add_row(
                 resource.name,
+                resource.source,
                 resource.current_version,
                 resource.newest_version,
                 str(not resource.installed_version_equal_or_newer_than_new_version())
