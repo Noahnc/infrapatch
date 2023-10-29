@@ -103,7 +103,7 @@ class MainHandler:
                 continue
             if commit_changes:
                 repo.index.add([resource.source_file.absolute().as_posix()])
-                repo.index.commit(f"Updated {resource.resource_name} '{resource.name}' from version '{resource.current_version}' to '{resource.newest_version}'.")
+                repo.index.commit(f"Bump {resource.resource_name} '{resource.name}' from version '{resource.current_version}' to '{resource.newest_version}'.")
             resource.set_patched()
         return upgradable_resources
 
