@@ -56,13 +56,7 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
 
     push_changes(target_branch, working_directory)
 
-    pull = create_pr(github_token, head_branch, repository_name, target_branch)
-    return_values = {"pr_number": pull.number}
-    return_value_file = Path("return_values.json")
-    if return_value_file.exists():
-        return_value_file.unlink()
-    with open(return_value_file, "w") as f:
-        f.write(json.dumps(return_values))
+    create_pr(github_token, head_branch, repository_name, target_branch)
 
 
 def push_changes(target_branch, working_directory):

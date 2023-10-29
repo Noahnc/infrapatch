@@ -41,9 +41,6 @@ outputs:
   target_branch:
     description: "Name of the branch where changes will be pushed to"
     value: ${{ inputs.target_branch_name }}
-  pr_number:
-    description: "Number of the pull request that was created"
-    value: ${{ steps.statistics.outputs.pr_number }}
 
 runs:
   using: composite
@@ -128,12 +125,3 @@ runs:
         arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         python -m "$module" "${arguments[@]}"
 
-    - name: Get statistics
-      id: statistics
-      if: ${{ inputs.report_only == 'false' }}
-      shell: pwsh
-      run: |
-        $report = Get-Content "return_values.json" -Raw | ConvertFrom-Json
-        $pr_number = $report.pull_number
-        Write-Host "Found PR $pr_number"
-        echo "pr_number=$pr_number" >> $GITHUB_OUTPUT

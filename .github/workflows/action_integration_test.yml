@@ -29,12 +29,11 @@ jobs:
         with:
           report_only: false
 
-      - name: Delete PR and target_branch
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh branch delete ${{ steps.update.outputs.target_branch }} --force
+      - name: Delete created branch
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{github.token}}
+          branches: ${{ steps.update.outputs.target_branch }}
 
 
 
