@@ -89,8 +89,8 @@ class MainHandler:
             if repo.bare:
                 raise Exception("Working directory is not a git repository.")
             log.info(f"Committing changes to git branch '{repo.active_branch.name}'.")
+        self.print_resource_table(resources, True)
         if not confirm:
-            self.print_resource_table(resources, True)
             if not click.confirm("Do you want to apply the changes?"):
                 print("Aborting...")
                 return []
