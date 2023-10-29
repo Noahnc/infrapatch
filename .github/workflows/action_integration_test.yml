@@ -12,6 +12,9 @@ on:
 
 jobs:
   integration-test:
+    env:
+      report_json_file: InfraPatch_Statistics.json
+
     name: "Run GitHub Action integration test"
     runs-on: ubuntu-latest
     steps:
@@ -21,14 +24,36 @@ jobs:
       - name: Run in report only mode
         uses: ./
         with:
-          push_changes: false
           report_only: true
 
       - name: Run in update mode
+        id: update
         uses: ./
         with:
-          push_changes: false
           report_only: false
+          target_branch_name: "feat/infrapatch_test_${{ github.run_number }}"
+
+      - name: Check update result
+        shell: pwsh
+        run: |
+          $report = Get-Content $env:report_json_file -Raw | ConvertFrom-Json
+          if ( -not $report.total_resources -gt 0 ) {
+            throw "Failed to get resources"
+          }
+          if ( -not ( $report.resources_patched -gt 3 ) ) {
+              throw "No resources should be patched"
+          }
+          if ( $report.errors -gt 0 ) {
+              throw "Errors have been detected"
+          }
+
+      - name: Delete created branch$
+        if: always()
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{github.token}}
+          branches: ${{ steps.update.outputs.target_branch }}
+          soft_fail: true
 
 
 

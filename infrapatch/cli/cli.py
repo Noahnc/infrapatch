@@ -14,7 +14,7 @@ from infrapatch.core.utils.hcl_edit_cli import HclEditCli
 from infrapatch.core.utils.hcl_handler import HclHandler
 from infrapatch.core.utils.registry_handler import RegistryHandler
 
-main_handler = None
+main_handler: MainHandler = None
 
 
 @click.group(invoke_without_command=True)
@@ -48,15 +48,14 @@ def report(project_root: str, only_upgradable: bool, dump_json_statistics: bool)
 
 
 @main.command()
-@click.option("project_root", "--project-root", default=None,
-              help="Root directory of the project. If not specified, the current working directory is used. If commit-changes is set, this has to be the root of a git repository.")
+@click.option("project_root", "--project-root", default=None, help="Root directory of the project. If not specified, the current working directory is used.")
 @click.option("--confirm", is_flag=True, help="Apply changes without confirmation.")
 @click.option("--dump-json-statistics", is_flag=True, help="Creates a json file containing statistics about the updated resources in the cwd.")
-@click.option("--commit-changes", is_flag=True, help="Commits the changes to a git repository.")
 @catch_exception(handle=Exception)
-def update(project_root: str, confirm: bool, dump_json_statistics: bool, commit_changes: bool):
+def update(project_root: str, confirm: bool, dump_json_statistics: bool):
+    """Finds all modules and providers in the project_root and updates them to the newest version."""
     if project_root is None: project_root = Path.cwd()
     global main_handler
     resources = main_handler.get_all_terraform_resources(Path(project_root))
-    main_handler.update_resources(resources, confirm, Path(project_root), commit_changes)
+    main_handler.update_resources(resources, confirm, Path(project_root))
     main_handler.dump_statistics(resources, dump_json_statistics)
