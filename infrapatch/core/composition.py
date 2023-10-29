@@ -28,10 +28,10 @@ def build_main_handler(default_registry_domain: str, credentials_file_path: str 
 
 
 class MainHandler:
-    def __init__(self, hcl_handler: HclHandler, registry_handler: RegistryHandler, Console: rich.Console):
+    def __init__(self, hcl_handler: HclHandler, registry_handler: RegistryHandler, console: Console):
         self.hcl_handler = hcl_handler
         self.registry_handler = registry_handler
-        self._console = Console
+        self._console = console
 
     def get_all_terraform_resources(self, project_root: Path) -> list[VersionedTerraformResource]:
         log.info(f"Searching for .tf files in {project_root.absolute().as_posix()} ...")
