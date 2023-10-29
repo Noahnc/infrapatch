@@ -1,5 +1,5 @@
 # Width of the cli interface
-CLI_WIDTH = 130
+CLI_WIDTH = 160
 
 # Name of this App. Used all over the place in the cli
 APP_NAME = "InfraPatch"
