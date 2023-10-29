@@ -1,7 +1,10 @@
+import json
+import subprocess
 from pathlib import Path
 import logging as log
 import click
-import pygit2
+from github import Auth, Github
+from github.PullRequest import PullRequest
 
 from infrapatch.core.composition import build_main_handler
 from infrapatch.core.log_helper import catch_exception, setup_logging
@@ -14,10 +17,13 @@ from pygit2 import Repository, Remote
 @click.option("--default-registry-domain")
 @click.option("--registry-secrets-string", default=None)
 @click.option("--github-token")
+@click.option("--target-branch")
+@click.option("--head-branch")
+@click.option("--repository-name")
 @click.option("--report-only", is_flag=True)
 @click.option("--working-directory")
 @catch_exception(handle=Exception)
-def main(debug: bool, default_registry_domain: str, registry_secrets_string: str, github_token: str, report_only: bool,
+def main(debug: bool, default_registry_domain: str, registry_secrets_string: str, github_token: str, target_branch: str, head_branch: str, repository_name: str, report_only: bool,
          working_directory: str):
     setup_logging(debug)
     log.debug(f"Running infrapatch with the following parameters: "
@@ -46,6 +52,35 @@ def main(debug: bool, default_registry_domain: str, registry_secrets_string: str
 
     main_handler.update_resources(upgradable_resources, True, working_directory, True)
     main_handler.print_resource_table(upgradable_resources)
+    main_handler.dump_statistics(upgradable_resources, save_as_json_file=True)
+
+    push_changes(target_branch, working_directory)
+
+    create_pr(github_token, head_branch, repository_name, target_branch)
+
+
+def push_changes(target_branch, working_directory):
+    command = ["git", "push", "-f", "-u", "origin", target_branch]
+    log.debug(f"Executing command: {' '.join(command)}")
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, cwd=working_directory.absolute().as_posix())
+    except Exception as e:
+        raise Exception(f"Error pushing to remote: {e}")
+    if result.returncode != 0:
+        log.error(f"Stdout: {result.stdout}")
+        raise Exception(f"Error pushing to remote: {result.stderr}")
+
+
+def create_pr(github_token, head_branch, repository_name, target_branch) -> PullRequest:
+    token = Auth.Token(github_token)
+    github = Github(auth=token)
+    repo = github.get_repo(repository_name)
+    pull = repo.get_pulls(state='open', sort='created', base=head_branch, head=target_branch)
+    if pull.totalCount != 0:
+        log.info(f"Pull request found from '{target_branch}' to '{head_branch}'")
+        return pull[0]
+    log.info(f"No pull request found from '{target_branch}' to '{head_branch}'. Creating a new one.")
+    return repo.create_pull(title=f"InfraPatch Module and Provider Update", body=f"InfraPatch Module and Provider Update", base=head_branch, head=target_branch)
 
 
 def get_credentials_from_string(credentials_string: str) -> dict:
