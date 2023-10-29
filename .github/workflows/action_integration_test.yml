@@ -12,6 +12,9 @@ on:
 
 jobs:
   integration-test:
+    env:
+      report_json_file: InfraPatch_Statistics.json
+
     name: "Run GitHub Action integration test"
     runs-on: ubuntu-latest
     steps:
@@ -43,7 +46,8 @@ jobs:
               throw "Errors have been detected"
           }
 
-      - name: Delete created branch
+      - name: Delete created branch$
+        if: always()
         uses: dawidd6/action-delete-branch@v3
         with:
           github_token: ${{github.token}}
