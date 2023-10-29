@@ -120,7 +120,7 @@ class MainHandler:
                 resource.newest_version,
                 str(not resource.installed_version_equal_or_newer_than_new_version())
             )
-        console = Console()
+        console = Console(width=cs.CLI_WIDTH)
         console.print(table)
 
     def dump_statistics(self, resources, save_as_json_file: bool = False):
