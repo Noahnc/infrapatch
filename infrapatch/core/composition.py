@@ -107,8 +107,7 @@ class MainHandler:
 
     def _compose_resource_table(self, resources: list[VersionedTerraformResource], title: str):
         table = Table(show_header=True,
-                      title=title,
-                      width=cs.CLI_WIDTH
+                      title=title
                       )
         table.add_column("Name")
         table.add_column("Current Version")
