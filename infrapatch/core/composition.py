@@ -3,6 +3,7 @@ import logging as log
 from pathlib import Path
 
 import click
+import rich
 from git import Repo
 from rich import progress
 from rich.console import Console
@@ -23,13 +24,14 @@ def build_main_handler(default_registry_domain: str, credentials_file_path: str 
     if credentials_dict is None:
         credentials_dict = get_registry_credentials(hcl_handler, credentials_file_path)
     registry_handler = RegistryHandler(default_registry_domain, credentials_dict)
-    return MainHandler(hcl_handler, registry_handler)
+    return MainHandler(hcl_handler, registry_handler, Console(width=cs.CLI_WIDTH))
 
 
 class MainHandler:
-    def __init__(self, hcl_handler: HclHandler, registry_handler: RegistryHandler):
+    def __init__(self, hcl_handler: HclHandler, registry_handler: RegistryHandler, console: Console):
         self.hcl_handler = hcl_handler
         self.registry_handler = registry_handler
+        self._console = console
 
     def get_all_terraform_resources(self, project_root: Path) -> list[VersionedTerraformResource]:
         log.info(f"Searching for .tf files in {project_root.absolute().as_posix()} ...")
@@ -108,21 +110,24 @@ class MainHandler:
     def _compose_resource_table(self, resources: list[VersionedTerraformResource], title: str):
         table = Table(show_header=True,
                       title=title,
-                      width=cs.CLI_WIDTH
+                      expand=True
                       )
-        table.add_column("Name")
-        table.add_column("Current Version")
-        table.add_column("Newest Version")
+        table.add_column("Name", overflow="fold")
+        table.add_column("Source", overflow="fold")
+        table.add_column("Current")
+        table.add_column("Newest")
         table.add_column("Upgradeable")
         for resource in resources:
+            name = resource.identifier if isinstance(resource, TerraformProvider) else resource.name
             table.add_row(
                 resource.name,
+                resource.source,
                 resource.current_version,
                 resource.newest_version,
                 str(not resource.installed_version_equal_or_newer_than_new_version())
             )
-        console = Console()
-        console.print(table)
+        console = Console(width=cs.CLI_WIDTH)
+        self._console.print(table)
 
     def dump_statistics(self, resources, save_as_json_file: bool = False):
         providers = [resource for resource in resources if isinstance(resource, TerraformProvider)]
@@ -144,7 +149,7 @@ class MainHandler:
                 f.write(json.dumps(statistics))
         table = Table(show_header=True,
                       title="Statistics",
-                      width=cs.CLI_WIDTH
+                      expand=True
                       )
         table.add_column("Total Resources")
         table.add_column("Resources Pending Update")
@@ -160,4 +165,4 @@ class MainHandler:
             str(statistics["modules_count"]),
             str(statistics["providers_count"])
         )
-        Console().print(table)
+        self._console.print(table)
