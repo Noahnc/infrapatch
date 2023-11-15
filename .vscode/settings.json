@@ -35,5 +35,12 @@
     "infrapatch"
   ],
   "editor.formatOnPaste": true,
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.fixAll": [
+    "source.unusedImports",
+    "source.convertImportFormat"
+  ],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticMode": "workspace"
 }
