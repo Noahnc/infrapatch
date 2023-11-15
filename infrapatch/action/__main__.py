@@ -1,7 +1,7 @@
-import json
+import logging as log
 import subprocess
 from pathlib import Path
-import logging as log
+
 import click
 from github import Auth, Github
 from github.PullRequest import PullRequest
@@ -9,7 +9,6 @@ from github.PullRequest import PullRequest
 from infrapatch.core.composition import build_main_handler
 from infrapatch.core.log_helper import catch_exception, setup_logging
 from infrapatch.core.models.versioned_terraform_resources import get_upgradable_resources
-from pygit2 import Repository, Remote
 
 
 @click.group(invoke_without_command=True)
@@ -23,16 +22,26 @@ from pygit2 import Repository, Remote
 @click.option("--report-only", is_flag=True)
 @click.option("--working-directory")
 @catch_exception(handle=Exception)
-def main(debug: bool, default_registry_domain: str, registry_secrets_string: str, github_token: str, target_branch: str, head_branch: str, repository_name: str, report_only: bool,
-         working_directory: str):
+def main(
+    debug: bool,
+    default_registry_domain: str,
+    registry_secrets_string: str,
+    github_token: str,
+    target_branch: str,
+    head_branch: str,
+    repository_name: str,
+    report_only: bool,
+    working_directory: Path,
+):
     setup_logging(debug)
-    log.debug(f"Running infrapatch with the following parameters: "
-              f"default_registry_domain={default_registry_domain}, "
-              f"registry_secrets_string={registry_secrets_string}, "
-              f"github_token={github_token}, "
-              f"report_only={report_only}, "
-              f"working_directory={working_directory}"
-              )
+    log.debug(
+        f"Running infrapatch with the following parameters: "
+        f"default_registry_domain={default_registry_domain}, "
+        f"registry_secrets_string={registry_secrets_string}, "
+        f"github_token={github_token}, "
+        f"report_only={report_only}, "
+        f"working_directory={working_directory}"
+    )
     credentials = {}
     working_directory = Path(working_directory)
     if registry_secrets_string is not None:
@@ -74,12 +83,12 @@ def create_pr(github_token, head_branch, repository_name, target_branch) -> Pull
     token = Auth.Token(github_token)
     github = Github(auth=token)
     repo = github.get_repo(repository_name)
-    pull = repo.get_pulls(state='open', sort='created', base=head_branch, head=target_branch)
+    pull = repo.get_pulls(state="open", sort="created", base=head_branch, head=target_branch)
     if pull.totalCount != 0:
         log.info(f"Pull request found from '{target_branch}' to '{head_branch}'")
         return pull[0]
     log.info(f"No pull request found from '{target_branch}' to '{head_branch}'. Creating a new one.")
-    return repo.create_pull(title=f"InfraPatch Module and Provider Update", body=f"InfraPatch Module and Provider Update", base=head_branch, head=target_branch)
+    return repo.create_pull(title="InfraPatch Module and Provider Update", body="InfraPatch Module and Provider Update", base=head_branch, head=target_branch)
 
 
 def get_credentials_from_string(credentials_string: str) -> dict:

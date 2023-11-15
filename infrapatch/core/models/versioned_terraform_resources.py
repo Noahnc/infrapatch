@@ -3,7 +3,7 @@ import re
 import semantic_version
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence, Union
 
 
 class ResourceStatus:
@@ -17,14 +17,14 @@ class VersionedTerraformResource:
     name: str
     current_version: str
     source_file: Path
-    _newest_version: Optional[str] = None
+    _newest_version: Union[str, None] = None
     _status: str = ResourceStatus.UNPATCHED
-    _base_domain: str = None
-    _identifier: str = None
-    _source: str = None
+    _base_domain: Union[str, None] = None
+    _identifier: Union[str, None] = None
+    _source: Union[str, None] = None
 
     @property
-    def source(self) -> str:
+    def source(self) -> Union[str, None]:
         return self._source
 
     @property
@@ -40,7 +40,7 @@ class VersionedTerraformResource:
         raise NotImplementedError()
 
     @property
-    def identifier(self) -> str:
+    def identifier(self) -> Union[str, None]:
         return self._identifier
 
     @property
@@ -50,6 +50,8 @@ class VersionedTerraformResource:
     @property
     def newest_version_base(self):
         if self.has_tile_constraint():
+            if self.newest_version is None:
+                raise Exception(f"Newest version of resource '{self.name}' is not set.")
             return self.newest_version.strip("~>")
         return self.newest_version
 
@@ -86,9 +88,9 @@ class VersionedTerraformResource:
         # chech if the current version has the following format: "~>3.76.0"
         if self.has_tile_constraint():
             current = semantic_version.Version(self.current_version.strip("~>"))
-            if current.major > newest.major:
+            if current.major > newest.major: # type: ignore
                 return True
-            if current.minor >= newest.minor:
+            if current.minor >= newest.minor: # type: ignore
                 return True
             return False
 
@@ -123,10 +125,12 @@ class VersionedTerraformResource:
 class TerraformModule(VersionedTerraformResource):
 
     def __post_init__(self):
+        if self._source is None:
+            raise Exception("Source is None.")
         self.source = self._source
 
     @property
-    def source(self) -> str:
+    def source(self) -> Union[str, None]:
         return self._source
 
     @property
@@ -137,7 +141,7 @@ class TerraformModule(VersionedTerraformResource):
     def source(self, source: str):
         source_lower_case = source.lower()
         self._source = source_lower_case
-        self.newest_version = None
+        self._newest_version = None
         if re.match(r"^[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$", source_lower_case):
             log.debug(f"Source '{source_lower_case}' is from a generic registry.")
             self._base_domain = source_lower_case.split("/")[0]
@@ -154,10 +158,12 @@ class TerraformModule(VersionedTerraformResource):
 class TerraformProvider(VersionedTerraformResource):
 
     def __post_init__(self):
+        if self._source is None:
+            raise Exception("Source is None.")
         self.source = self._source
 
     @property
-    def source(self) -> str:
+    def source(self) -> Union[str, None]:
         return self._source
 
     @property
@@ -168,7 +174,7 @@ class TerraformProvider(VersionedTerraformResource):
     def source(self, source: str) -> None:
         source_lower_case = source.lower()
         self._source = source_lower_case
-        self.newest_version = None
+        self._newest_version = None
         if re.match(r"^[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$", source_lower_case):
             log.debug(f"Source '{source_lower_case}' is from a generic registry.")
             self._base_domain = source_lower_case.split("/")[0]
@@ -181,9 +187,9 @@ class TerraformProvider(VersionedTerraformResource):
             raise Exception(f"Source '{source_lower_case}' is not a valid terraform resource source.")
 
 
-def get_upgradable_resources(resources: list[VersionedTerraformResource]) -> list[VersionedTerraformResource]:
+def get_upgradable_resources(resources: Sequence[VersionedTerraformResource]) -> Sequence[VersionedTerraformResource]:
     return [resource for resource in resources if not resource.check_if_up_to_date()]
 
 
-def from_terraform_resources_to_dict_list(terraform_resources: list[VersionedTerraformResource]) -> list[dict]:
+def from_terraform_resources_to_dict_list(terraform_resources: Sequence[VersionedTerraformResource]) -> Sequence[dict]:
     return [terraform_resource.__to_dict__() for terraform_resource in terraform_resources]

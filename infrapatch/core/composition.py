@@ -1,9 +1,9 @@
 import json
 import logging as log
 from pathlib import Path
+from typing import Sequence, Union
 
 import click
-import rich
 from git import Repo
 from rich import progress
 from rich.console import Console
@@ -11,18 +11,24 @@ from rich.table import Table
 
 import infrapatch.core.constants as cs
 from infrapatch.core.credentials_helper import get_registry_credentials
-from infrapatch.core.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider, get_upgradable_resources, ResourceStatus, \
-    from_terraform_resources_to_dict_list
+from infrapatch.core.models.versioned_terraform_resources import (
+    VersionedTerraformResource,
+    TerraformModule,
+    TerraformProvider,
+    get_upgradable_resources,
+    ResourceStatus,
+    from_terraform_resources_to_dict_list,
+)
 from infrapatch.core.utils.hcl_edit_cli import HclEditCliException, HclEditCli
 from infrapatch.core.utils.hcl_handler import HclHandler
 from infrapatch.core.utils.registry_handler import RegistryHandler
 
 
-def build_main_handler(default_registry_domain: str, credentials_file_path: str = None, credentials_dict: dict = None):
+def build_main_handler(default_registry_domain: str, credentials_file: Union[Path, None] = None, credentials_dict: Union[dict, None] = None):
     hcl_edit_cli = HclEditCli()
     hcl_handler = HclHandler(hcl_edit_cli)
     if credentials_dict is None:
-        credentials_dict = get_registry_credentials(hcl_handler, credentials_file_path)
+        credentials_dict = get_registry_credentials(hcl_handler, credentials_file)
     registry_handler = RegistryHandler(default_registry_domain, credentials_dict)
     return MainHandler(hcl_handler, registry_handler, Console(width=cs.CLI_WIDTH))
 
@@ -33,7 +39,7 @@ class MainHandler:
         self.registry_handler = registry_handler
         self._console = console
 
-    def get_all_terraform_resources(self, project_root: Path) -> list[VersionedTerraformResource]:
+    def get_all_terraform_resources(self, project_root: Path) -> Sequence[VersionedTerraformResource]:
         log.info(f"Searching for .tf files in {project_root.absolute().as_posix()} ...")
         terraform_files = self.hcl_handler.get_all_terraform_files(project_root)
         if len(terraform_files) == 0:
@@ -45,7 +51,7 @@ class MainHandler:
             resource.newest_version = self.registry_handler.get_newest_version(resource)
         return resources
 
-    def print_resource_table(self, resources: list[VersionedTerraformResource], only_upgradable: bool = False):
+    def print_resource_table(self, resources: Sequence[VersionedTerraformResource], only_upgradable: bool = False):
         if len(resources) == 0:
             print("No resources found.")
             return
@@ -79,13 +85,14 @@ class MainHandler:
             print("No providers found.")
 
     # noinspection PyUnboundLocalVariable
-    def update_resources(self, resources: list[VersionedTerraformResource], confirm: bool, working_dir: Path, commit_changes: bool = False) -> list[VersionedTerraformResource]:
+    def update_resources(self, resources: Sequence[VersionedTerraformResource], confirm: bool, working_dir: Path, commit_changes: bool = False) -> Sequence[VersionedTerraformResource]:
         upgradable_resources = get_upgradable_resources(resources)
         if len(upgradable_resources) == 0:
             log.info("All resources are up to date, nothing to do.")
             return []
+        repo: Union[Repo, None] = None
         if commit_changes:
-            repo = Repo(working_dir.absolute().as_posix())
+            repo = Repo(path=working_dir.absolute().as_posix())
             if repo.bare:
                 raise Exception("Working directory is not a git repository.")
             log.info(f"Committing changes to git branch '{repo.active_branch.name}'.")
@@ -102,30 +109,22 @@ class MainHandler:
                 resource.set_patch_error()
                 continue
             if commit_changes:
+                if repo is None:
+                    raise Exception("repo is None.")
                 repo.index.add([resource.source_file.absolute().as_posix()])
                 repo.index.commit(f"Bump {resource.resource_name} '{resource.name}' from version '{resource.current_version}' to '{resource.newest_version}'.")
             resource.set_patched()
         return upgradable_resources
 
-    def _compose_resource_table(self, resources: list[VersionedTerraformResource], title: str):
-        table = Table(show_header=True,
-                      title=title,
-                      expand=True
-                      )
+    def _compose_resource_table(self, resources: Sequence[VersionedTerraformResource], title: str):
+        table = Table(show_header=True, title=title, expand=True)
         table.add_column("Name", overflow="fold")
         table.add_column("Source", overflow="fold")
         table.add_column("Current")
         table.add_column("Newest")
         table.add_column("Upgradeable")
         for resource in resources:
-            name = resource.identifier if isinstance(resource, TerraformProvider) else resource.name
-            table.add_row(
-                resource.name,
-                resource.source,
-                resource.current_version,
-                resource.newest_version,
-                str(not resource.installed_version_equal_or_newer_than_new_version())
-            )
+            table.add_row(resource.name, resource.source, resource.current_version, resource.newest_version, str(not resource.installed_version_equal_or_newer_than_new_version()))
         self._console.print(table)
 
     def dump_statistics(self, resources, save_as_json_file: bool = False):
@@ -134,7 +133,7 @@ class MainHandler:
         statistics = {}
         statistics["errors"] = len([resource for resource in resources if resource.status == ResourceStatus.PATCH_ERROR])
         statistics["resources_patched"] = len([resource for resource in resources if resource.status == ResourceStatus.PATCHED])
-        statistics["resources_pending_update"] = len([resource for resource in resources if resource.check_if_up_to_date() == False])
+        statistics["resources_pending_update"] = len([resource for resource in resources if resource.check_if_up_to_date() is False])
         statistics["total_resources"] = len(resources)
         statistics["modules_count"] = len(modules)
         statistics["providers_count"] = len(providers)
@@ -146,10 +145,7 @@ class MainHandler:
                 file.unlink()
             with open(file, "w") as f:
                 f.write(json.dumps(statistics))
-        table = Table(show_header=True,
-                      title="Statistics",
-                      expand=True
-                      )
+        table = Table(show_header=True, title="Statistics", expand=True)
         table.add_column("Total Resources")
         table.add_column("Resources Pending Update")
         table.add_column("Resources Patched")
@@ -162,6 +158,6 @@ class MainHandler:
             str(statistics["resources_patched"]),
             str(statistics["errors"]),
             str(statistics["modules_count"]),
-            str(statistics["providers_count"])
+            str(statistics["providers_count"]),
         )
         self._console.print(table)
