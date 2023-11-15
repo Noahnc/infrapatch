@@ -30,5 +30,10 @@
     "rgba(127,255,127,0.07)",
     "rgba(255,127,255,0.07)",
     "rgba(79,236,236,0.07)"
-  ]
+  ],
+  "cSpell.words": [
+    "infrapatch"
+  ],
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true
 }
