@@ -12,7 +12,7 @@ def setup_logging(debug: bool = False):
     _debug = debug
     if debug:
         log_level = log.DEBUG
-    log.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
+    log.basicConfig(level=log_level, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 def catch_exception(func=None, *, handle):

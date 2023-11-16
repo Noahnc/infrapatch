@@ -48,7 +48,6 @@ def report(project_root_path: str, only_upgradable: bool, dump_json_statistics: 
     main_handler.dump_statistics(resources, dump_json_statistics)
 
 
-
 @main.command()
 @click.option("--project-root-path", default=None, help="Root directory of the project. If not specified, the current working directory is used.")
 @click.option("--confirm", is_flag=True, help="Apply changes without confirmation.")

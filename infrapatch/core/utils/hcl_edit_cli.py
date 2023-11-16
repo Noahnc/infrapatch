@@ -47,6 +47,5 @@ class HclEditCli:
             raise HclEditCliException(f"Could not execute CLI command '{command_string}': {e}")
         if result.returncode != 0:
             log.error(f"Stdout: {result.stdout}")
-            raise HclEditCliException(
-                f"CLI command '{command_string}' failed with exit code {result.returncode}.")
+            raise HclEditCliException(f"CLI command '{command_string}' failed with exit code {result.returncode}.")
         return result.stdout

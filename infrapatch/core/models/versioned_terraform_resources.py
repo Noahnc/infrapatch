@@ -72,7 +72,6 @@ class VersionedTerraformResource:
         self._status = ResourceStatus.PATCH_ERROR
 
     def installed_version_equal_or_newer_than_new_version(self):
-
         if self.newest_version is None:
             raise Exception(f"Newest version of resource '{self.name}' is not set.")
 
@@ -88,9 +87,9 @@ class VersionedTerraformResource:
         # chech if the current version has the following format: "~>3.76.0"
         if self.has_tile_constraint():
             current = semantic_version.Version(self.current_version.strip("~>"))
-            if current.major > newest.major: # type: ignore
+            if current.major > newest.major:  # type: ignore
                 return True
-            if current.minor >= newest.minor: # type: ignore
+            if current.minor >= newest.minor:  # type: ignore
                 return True
             return False
 
@@ -117,13 +116,12 @@ class VersionedTerraformResource:
             "status": self.status,
             "base_domain": self.base_domain,
             "identifier": self.identifier,
-            "source": self.source
+            "source": self.source,
         }
 
 
 @dataclass
 class TerraformModule(VersionedTerraformResource):
-
     def __post_init__(self):
         if self._source is None:
             raise Exception("Source is None.")
@@ -147,8 +145,7 @@ class TerraformModule(VersionedTerraformResource):
             self._base_domain = source_lower_case.split("/")[0]
             self._identifier = "/".join(source_lower_case.split("/")[1:])
         elif re.match(r"^[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$", source_lower_case):
-            log.debug(
-                f"Source '{source_lower_case}' is from the public registry.")
+            log.debug(f"Source '{source_lower_case}' is from the public registry.")
             self._identifier = source_lower_case
         else:
             raise Exception(f"Source '{source_lower_case}' is not a valid terraform resource source.")
@@ -156,7 +153,6 @@ class TerraformModule(VersionedTerraformResource):
 
 @dataclass
 class TerraformProvider(VersionedTerraformResource):
-
     def __post_init__(self):
         if self._source is None:
             raise Exception("Source is None.")
@@ -180,8 +176,7 @@ class TerraformProvider(VersionedTerraformResource):
             self._base_domain = source_lower_case.split("/")[0]
             self._identifier = "/".join(source_lower_case.split("/")[1:])
         elif re.match(r"^[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$", source_lower_case):
-            log.debug(
-                f"Source '{source_lower_case}' is from the public registry.")
+            log.debug(f"Source '{source_lower_case}' is from the public registry.")
             self._identifier = source_lower_case
         else:
             raise Exception(f"Source '{source_lower_case}' is not a valid terraform resource source.")

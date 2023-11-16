@@ -54,12 +54,7 @@ class HclHandler:
                     providers = terraform_file_dict["terraform"]["required_providers"]
                     for provider_name, provider_config in providers.items():
                         found_resources.append(
-                            TerraformProvider(
-                                name=provider_name,
-                                _source=provider_config["source"],
-                                current_version=provider_config["version"],
-                                source_file=tf_file
-                            )
+                            TerraformProvider(name=provider_name, _source=provider_config["source"], current_version=provider_config["version"], source_file=tf_file)
                         )
             if "module" in terraform_file_dict:
                 modules = terraform_file_dict["module"]
@@ -67,13 +62,7 @@ class HclHandler:
                     if "source" not in value:
                         log.debug(f"Skipping module '{module_name}' because it has no source attribute.")
                         continue
-                    found_resources.append(
-                        TerraformModule(
-                            name=module_name,
-                            _source=value["source"],
-                            current_version=value["version"],
-                            source_file=tf_file
-                        ))
+                    found_resources.append(TerraformModule(name=module_name, _source=value["source"], current_version=value["version"], source_file=tf_file))
             return found_resources
 
     def get_all_terraform_files(self, root: Path) -> Sequence[Path]:
@@ -89,9 +78,9 @@ class HclHandler:
     def get_credentials_form_user_rc_file(self) -> dict[str, str]:
         # get the home of the user
         user_home = Path.home()
-        
+
         credentials: dict[str, str] = {}
-        
+
         # check if on windows
         if platform.system() == "Windows":
             terraform_rc_file = user_home.joinpath("AppData/Roaming/terraform.rc")

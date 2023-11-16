@@ -85,7 +85,9 @@ class MainHandler:
             print("No providers found.")
 
     # noinspection PyUnboundLocalVariable
-    def update_resources(self, resources: Sequence[VersionedTerraformResource], confirm: bool, working_dir: Path, commit_changes: bool = False) -> Sequence[VersionedTerraformResource]:
+    def update_resources(
+        self, resources: Sequence[VersionedTerraformResource], confirm: bool, working_dir: Path, commit_changes: bool = False
+    ) -> Sequence[VersionedTerraformResource]:
         upgradable_resources = get_upgradable_resources(resources)
         if len(upgradable_resources) == 0:
             log.info("All resources are up to date, nothing to do.")
