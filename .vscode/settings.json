@@ -1,0 +1,43 @@
+{
+  "terminal.integrated.env.osx": {
+    "PYTHONPATH": "${workspaceFolder}",
+  },
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}",
+  },
+  "terminal.integrated.env.windows": {
+    "PYTHONPATH": "${workspaceFolder}",
+  },
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true,
+      "source.organizeImports": true
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "files.autoSave": "afterDelay",
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.inlayHints.pytestParameters": true,
+  "python.analysis.inlayHints.variableTypes": true,
+  "python.languageServer": "Default",
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "python.missingPackage.severity": "Error",
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "cSpell.words": [
+    "infrapatch"
+  ],
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.fixAll": [
+    "source.unusedImports",
+    "source.convertImportFormat"
+  ],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticMode": "workspace",
+  "editor.guides.indentation": false,
+  "editor.guides.bracketPairs": true,
+  "editor.guides.highlightActiveBracketPair": true,
+  "editor.guides.bracketPairsHorizontal": false,
+}

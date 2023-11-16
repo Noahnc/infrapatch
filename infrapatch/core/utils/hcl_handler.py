@@ -2,11 +2,12 @@ import glob
 import logging as log
 import platform
 from pathlib import Path
+from typing import Sequence
 
 import pygohcl
 
-from infrapatch.core.utils.hcl_edit_cli import HclEditCli
 from infrapatch.core.models.versioned_terraform_resources import TerraformModule, TerraformProvider, VersionedTerraformResource
+from infrapatch.core.utils.hcl_edit_cli import HclEditCli
 
 
 class HclParserException(BaseException):
@@ -37,7 +38,7 @@ class HclHandler:
 
         self.hcl_edit_cli.update_hcl_value(resource_name, resource.source_file, resource.newest_version)
 
-    def get_terraform_resources_from_file(self, tf_file: Path) -> list[VersionedTerraformResource]:
+    def get_terraform_resources_from_file(self, tf_file: Path) -> Sequence[VersionedTerraformResource]:
         if not tf_file.exists():
             raise Exception(f"File '{tf_file}' does not exist.")
         if not tf_file.is_file():
@@ -53,29 +54,18 @@ class HclHandler:
                     providers = terraform_file_dict["terraform"]["required_providers"]
                     for provider_name, provider_config in providers.items():
                         found_resources.append(
-                            TerraformProvider(
-                                name=provider_name,
-                                _source=provider_config["source"],
-                                current_version=provider_config["version"],
-                                source_file=tf_file
-                            )
+                            TerraformProvider(name=provider_name, _source=provider_config["source"], current_version=provider_config["version"], source_file=tf_file)
                         )
             if "module" in terraform_file_dict:
                 modules = terraform_file_dict["module"]
                 for module_name, value in modules.items():
-                    if not "source" in value:
+                    if "source" not in value:
                         log.debug(f"Skipping module '{module_name}' because it has no source attribute.")
                         continue
-                    found_resources.append(
-                        TerraformModule(
-                            name=module_name,
-                            _source=value["source"],
-                            current_version=value["version"],
-                            source_file=tf_file
-                        ))
+                    found_resources.append(TerraformModule(name=module_name, _source=value["source"], current_version=value["version"], source_file=tf_file))
             return found_resources
 
-    def get_all_terraform_files(self, root: Path = None) -> list[Path]:
+    def get_all_terraform_files(self, root: Path) -> Sequence[Path]:
         if not root.is_dir():
             raise Exception(f"Path '{root}' is not a directory.")
         search_string = "*.tf"
@@ -85,9 +75,12 @@ class HclHandler:
         files = [Path(file_path) for file_path in file_paths]
         return files
 
-    def get_credentials_form_user_rc_file(self):
+    def get_credentials_form_user_rc_file(self) -> dict[str, str]:
         # get the home of the user
         user_home = Path.home()
+
+        credentials: dict[str, str] = {}
+
         # check if on windows
         if platform.system() == "Windows":
             terraform_rc_file = user_home.joinpath("AppData/Roaming/terraform.rc")
@@ -95,18 +88,17 @@ class HclHandler:
             terraform_rc_file = user_home.joinpath(".terraformrc")
         if not terraform_rc_file.exists() or not terraform_rc_file.is_file():
             log.debug("No terraformrc file found for the current user.")
-            return {}
-        credentials = {}
+            return credentials
         try:
             with open(terraform_rc_file.absolute(), "r") as file:
                 try:
                     terraform_rc_file_dict = pygohcl.loads(file.read())
                 except Exception as e:
                     log.error(f"Could not parse terraformrc file: {e}")
-                    return {}
+                    return credentials
                 if "credentials" not in terraform_rc_file_dict:
                     log.debug("No credentials found in terraformrc file.")
-                    return {}
+                    return credentials
                 for name, value in terraform_rc_file_dict["credentials"].items():
                     token = value["token"]
                     log.debug(f"Found the following credentials in terraformrc file: {name}={token[0:5]}...")
@@ -114,3 +106,4 @@ class HclHandler:
                 return credentials
         except Exception as e:
             log.error(f"Could not read terraformrc file: {e}")
+            return credentials

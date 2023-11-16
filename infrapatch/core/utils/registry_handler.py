@@ -10,8 +10,10 @@ from infrapatch.core.models.versioned_terraform_resources import VersionedTerraf
 class RegistryNotFoundException(BaseException):
     pass
 
+
 class RegistryMetadataException(BaseException):
     pass
+
 
 class ResourceNotFoundException(BaseException):
     pass

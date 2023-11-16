@@ -1,3 +1,4 @@
+from typing import Union
 import json
 import logging as log
 import infrapatch.core.constants as cs
@@ -6,7 +7,7 @@ from pathlib import Path
 from infrapatch.core.utils.hcl_handler import HclHandler
 
 
-def get_registry_credentials(hcl_handler: HclHandler, credentials_file: str = None) -> dict[str, str]:
+def get_registry_credentials(hcl_handler: HclHandler, credentials_file: Union[Path, None] = None) -> dict[str, str]:
     credentials = hcl_handler.get_credentials_form_user_rc_file()
     if credentials_file is None:
         credentials_file = Path.cwd().joinpath(cs.DEFAULT_CREDENTIALS_FILE_NAME)
