@@ -5,11 +5,23 @@
             "label": "format with ruff",
             "type": "shell",
             "command": "ruff",
-            "args": ["format", "."],
-            "group": {
-                "kind": "build",
-                "isDefault": true
+            "args": [
+                "format",
+                "."
+            ],
+            "presentation": {
+                "reveal": "always"
             },
+            "problemMatcher": []
+        },
+        {
+            "label": "ruff lint project",
+            "type": "shell",
+            "command": "ruff",
+            "args": [
+                "check",
+                "."
+            ],
             "presentation": {
                 "reveal": "always"
             },
