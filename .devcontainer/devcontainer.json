@@ -32,7 +32,6 @@
 				"evendead.help-me-add",
 				"charliermarsh.ruff",
 				"streetsidesoftware.code-spell-checker",
-				"oderwat.indent-rainbow",
 				"njqdev.vscode-python-typehint"
 			]
 		}
