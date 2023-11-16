@@ -1,0 +1,42 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "InfraPatch CLI: Report",
+            "type": "python",
+            "request": "launch",
+            "module": "infrapatch.cli",
+            "args": [
+                "--debug",
+                "report"
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "InfraPatch CLI: Update",
+            "type": "python",
+            "request": "launch",
+            "module": "infrapatch.cli",
+            "args": [
+                "--debug",
+                "update"
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "InfraPatch CLI: custom",
+            "type": "python",
+            "request": "launch",
+            "module": "infrapatch.cli",
+            "args": "${input:custom_args}",
+            "justMyCode": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "custom_args",
+            "description": "Space separated list of arguments to pass to the infrapatch cli",
+            "type": "promptString"
+        }
+    ]
+}

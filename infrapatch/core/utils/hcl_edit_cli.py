@@ -2,7 +2,7 @@ import logging as log
 import platform
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 
 class HclEditCliException(BaseException):
@@ -34,7 +34,7 @@ class HclEditCli:
             raise HclEditCliException(f"Could not get value for resource '{resource}' from file '{file}'.")
         return result
 
-    def _run_hcl_edit_command(self, action: str, resource: str, file: Path, value: str = None) -> Optional[str]:
+    def _run_hcl_edit_command(self, action: str, resource: str, file: Path, value: Union[str, None] = None) -> Optional[str]:
         command = [self._get_binary_path().absolute().as_posix(), action, resource]
         if value is not None:
             command.append(value)
@@ -47,6 +47,5 @@ class HclEditCli:
             raise HclEditCliException(f"Could not execute CLI command '{command_string}': {e}")
         if result.returncode != 0:
             log.error(f"Stdout: {result.stdout}")
-            raise HclEditCliException(
-                f"CLI command '{command_string}' failed with exit code {result.returncode}.")
+            raise HclEditCliException(f"CLI command '{command_string}' failed with exit code {result.returncode}.")
         return result.stdout
