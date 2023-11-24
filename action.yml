@@ -22,21 +22,14 @@ inputs:
     description: "Git email to use for commits. Defaults to bot@infrapatch.ch"
     required: false
     default: "bot@infrapatch.ch"
-  github_token:
-    description: "GitHub access token. Defaults to github.token."
-    default: ${{ github.token }}
   report_only:
     description: "Only report new versions. Do not update files. Defaults to false"
     default: "false"
     required: true
   registry_secrets:
-    description: "Registry secrets to use for private registries"
+    description: "Registry secrets to use for private registries. Needs to be a newline separated list of secrets in the format <registry_domain>:<secret_name>. Defaults to empty"
     required: false
     default: ""
-  working_directory:
-    description: "Working directory to run the command in. Defaults to the root of the repository"
-    required: false
-    default: ${{ github.workspace }}
 outputs:
   target_branch:
     description: "Name of the branch where changes will be pushed to"
@@ -75,7 +68,7 @@ runs:
       if: ${{ inputs.report_only == 'false' }}
       uses: peterjgrainger/action-create-branch@v2.2.0
       env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
       with:
         branch: "refs/heads/${{ inputs.target_branch_name }}"
 
@@ -111,17 +104,18 @@ runs:
         if [ "${{ runner.debug }}" == "1" ]; then
             arguments+=("--debug")
         fi
-        if [ "${{ inputs.report_only }}" == "true" ]; then
-            arguments+=("--report-only")
-        fi
-        if [ "${{ inputs.registry_secrets }}" != "" ]; then
-            arguments+=("--registry-secrets-string" "\"${{ inputs.registry_secrets }}\"")
-        fi
-        arguments+=("--github-token" "${{ inputs.github_token }}")
-        arguments+=("--head-branch" "${{ steps.branch.outputs.head }}")
-        arguments+=("--target-branch" "${{ steps.branch.outputs.target }}")
-        arguments+=("--repository-name" "${{ inputs.repository_name }}")
-        arguments+=("--working-directory" "${{ inputs.working_directory }}")
-        arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         python -m "$module" "${arguments[@]}"
+      env:
+        # Config from environment
+        github_token: ${{ env.GITHUB_TOKEN }}
+
+        # Config from inputs
+        default_registry_domain: ${{ inputs.DEFAULT_REGISTRY_DOMAIN }}
+        repository_name: ${{ inputs.repository_name }}
+        report_only: ${{ inputs.report_only }}
+        registry_secrets: ${{ inputs.REGISTRY_SECRETS }}
+
+        # Calculated config from other steps
+        head_branch: ${{ steps.branch.outputs.head }}
+        target_branch: ${{ steps.branch.outputs.target }}
 
