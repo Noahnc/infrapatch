@@ -1,82 +1,66 @@
 import logging as log
-import subprocess
-from pathlib import Path
+
 
 import click
 from github import Auth, Github
 from github.PullRequest import PullRequest
+from infrapatch.action.config import ActionConfigProvider
 
 from infrapatch.core.composition import build_main_handler
 from infrapatch.core.log_helper import catch_exception, setup_logging
 from infrapatch.core.models.versioned_terraform_resources import get_upgradable_resources
+from infrapatch.core.utils.git import Git
 
 
 @click.group(invoke_without_command=True)
 @click.option("--debug", is_flag=True)
-@click.option("--default-registry-domain")
-@click.option("--registry-secrets-string", default=None)
-@click.option("--github-token")
-@click.option("--target-branch")
-@click.option("--head-branch")
-@click.option("--repository-name")
-@click.option("--report-only", is_flag=True)
-@click.option("--working-directory")
 @catch_exception(handle=Exception)
-def main(
-    debug: bool,
-    default_registry_domain: str,
-    registry_secrets_string: str,
-    github_token: str,
-    target_branch: str,
-    head_branch: str,
-    repository_name: str,
-    report_only: bool,
-    working_directory: Path,
-):
+def main(debug: bool):
     setup_logging(debug)
-    log.debug(
-        f"Running infrapatch with the following parameters: "
-        f"default_registry_domain={default_registry_domain}, "
-        f"registry_secrets_string={registry_secrets_string}, "
-        f"github_token={github_token}, "
-        f"report_only={report_only}, "
-        f"working_directory={working_directory}"
-    )
-    credentials = {}
-    working_directory = Path(working_directory)
-    if registry_secrets_string is not None:
-        credentials = get_credentials_from_string(registry_secrets_string)
-    main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=credentials)
-    resources = main_handler.get_all_terraform_resources(working_directory)
 
-    if report_only:
+    config = ActionConfigProvider()
+
+    git = Git(config.working_directory)
+    github = Github(auth=Auth.Token(config.github_token))
+    github_repo = github.get_repo(config.repository_name)
+    github_head_branch = github_repo.get_branch(config.head_branch)
+
+    main_handler = build_main_handler(default_registry_domain=config.default_registry_domain, credentials_dict=config.registry_secrets)
+
+    git.fetch_origin()
+
+    if github_repo.get_branch(config.target_branch) is not None and config.report_only is False:
+        log.info(f"Branch {config.target_branch} already exists. Checking out...")
+        git.checkout_branch(config.target_branch, f"origin/{config.target_branch}")
+
+        log.info(f"Rebasing branch {config.target_branch} onto origin/{config.head_branch}")
+        git.run_git_command(["rebase", "-Xtheirs", f"origin/{config.head_branch}"])
+        git.push(["-f", "-u", "origin", config.target_branch])
+
+    resources = main_handler.get_all_terraform_resources(config.working_directory)
+
+    if config.report_only:
         main_handler.print_resource_table(resources)
         log.info("Report only mode is enabled. No changes will be applied.")
         return
 
     upgradable_resources = get_upgradable_resources(resources)
+
     if len(upgradable_resources) == 0:
         log.info("No upgradable resources found.")
         return
 
-    main_handler.update_resources(upgradable_resources, True, working_directory, True)
+    if github_repo.get_branch(config.target_branch) is None:
+        log.info(f"Branch {config.target_branch} does not exist. Creating and checking out...")
+        github_repo.create_git_ref(ref=f"refs/heads/{config.target_branch}", sha=github_head_branch.commit.sha)
+        git.checkout_branch(config.target_branch, f"origin/{config.head_branch}")
+
+    main_handler.update_resources(upgradable_resources, True, config.working_directory, True)
     main_handler.dump_statistics(upgradable_resources, save_as_json_file=True)
 
-    push_changes(target_branch, working_directory)
+    git.push(["-f", "-u", "origin", config.target_branch])
 
-    create_pr(github_token, head_branch, repository_name, target_branch)
-
-
-def push_changes(target_branch, working_directory):
-    command = ["git", "push", "-f", "-u", "origin", target_branch]
-    log.debug(f"Executing command: {' '.join(command)}")
-    try:
-        result = subprocess.run(command, capture_output=True, text=True, cwd=working_directory.absolute().as_posix())
-    except Exception as e:
-        raise Exception(f"Error pushing to remote: {e}")
-    if result.returncode != 0:
-        log.error(f"Stdout: {result.stdout}")
-        raise Exception(f"Error pushing to remote: {result.stderr}")
+    create_pr(config.github_token, config.head_branch, config.repository_name, config.target_branch)
 
 
 def create_pr(github_token, head_branch, repository_name, target_branch) -> PullRequest:
@@ -89,21 +73,6 @@ def create_pr(github_token, head_branch, repository_name, target_branch) -> Pull
         return pull[0]
     log.info(f"No pull request found from '{target_branch}' to '{head_branch}'. Creating a new one.")
     return repo.create_pull(title="InfraPatch Module and Provider Update", body="InfraPatch Module and Provider Update", base=head_branch, head=target_branch)
-
-
-def get_credentials_from_string(credentials_string: str) -> dict:
-    credentials = {}
-    if credentials_string == "":
-        return credentials
-    for line in credentials_string.splitlines():
-        try:
-            name, token = line.split("=", 1)
-        except ValueError as e:
-            log.debug(f"Secrets line '{line}' could not be split into name and token.")
-            raise Exception(f"Error processing secrets: '{e}'")
-        # add the name and token to the credentials dict
-        credentials[name] = token
-    return credentials
 
 
 if __name__ == "__main__":
