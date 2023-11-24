@@ -16,7 +16,7 @@
     },
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
-  "files.autoSave": "afterDelay",
+  "files.autoSave": "onFocusChange",
   "python.analysis.inlayHints.functionReturnTypes": true,
   "python.analysis.inlayHints.pytestParameters": true,
   "python.analysis.inlayHints.variableTypes": true,
