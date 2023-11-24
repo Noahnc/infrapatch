@@ -46,4 +46,7 @@
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
+  "files.exclude": {
+    "**/__pycache__": true
+  }
 }
