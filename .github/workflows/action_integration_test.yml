@@ -44,9 +44,10 @@ jobs:
         if: always()
         uses: dawidd6/action-delete-branch@v3
         with:
-          github_token: ${{github.token}}
           branches: ${{ steps.update.outputs.target_branch }}
           soft_fail: true
+        env:
+          GITHUB_TOKEN: ${{github.token}}
 
 
 
