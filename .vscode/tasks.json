@@ -26,6 +26,15 @@
                 "reveal": "always"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "pip install all dependencies",
+            "type": "shell",
+            "command": "pip3 install -r requirements.txt && pip3 install -r requirements-dev.txt",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
         }
     ]
 }

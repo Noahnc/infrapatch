@@ -1,11 +1,12 @@
-name: "Check Format and Lint Code"
+name: "Run Python Unit Tests"
+
 
 on:
   workflow_call:
 
 jobs:
-  check_code:
-    name: "Check Format and Lint Code"
+  integration-test:
+    name: "Run Unit Tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,7 +18,7 @@ jobs:
           python_version=$(cat python_version.txt)
           echo "Using Python version $python_version"
           echo "::set-output name=python_version::$(echo $python_version)"
-        
+
       - name: Install Python
         uses: actions/setup-python@v2
         with:
@@ -29,11 +30,20 @@ jobs:
             pip install -r requirements.txt
             pip install -r requirements-dev.txt
 
-      - name: Check code format with ruff
-        run: ruff format --check .
+      - name: Set timezone
+        uses: szenius/set-timezone@v1.2
+        with:
+          timezoneLinux: 'Europe/Berlin'
 
-      - name: Check code with ruff
-        run: ruff check .
+      - name: Run pytest
+        uses: pavelzw/pytest-action@v2
+        with:
+            verbose: true
+            emoji: true
+            job-summary: true
+            click-to-expand: true
+            report-title: 'InfraPatch Unit-Tests Report'
+
 
 
 

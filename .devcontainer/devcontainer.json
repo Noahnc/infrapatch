@@ -32,7 +32,8 @@
 				"evendead.help-me-add",
 				"charliermarsh.ruff",
 				"streetsidesoftware.code-spell-checker",
-				"njqdev.vscode-python-typehint"
+				"njqdev.vscode-python-typehint",
+				"Cameron.vscode-pytest"
 			]
 		}
 	}

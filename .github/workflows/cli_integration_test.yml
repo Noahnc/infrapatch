@@ -1,0 +1,79 @@
+name: CLI Integration test
+
+on:
+  workflow_call:
+
+jobs:
+  cli_integration_test:
+    name: CLI Integration test
+    # only run if not closed or closed with merge
+    if: ${{ github.event.pull_request.merged == true || github.event.pull_request.state != 'closed' }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      report_json_file: InfraPatch_Statistics.json
+
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          # - windows-latest Windows does currently not work because of pygohcl
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get Python Version
+        id: get_python_verion
+        run: |
+          python_version=$(cat python_version.txt)
+          echo "Using Python version $python_version"
+          echo "::set-output name=python_version::$(echo $python_version)"
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ steps.get_python_verion.outputs.python_version }}
+
+      - name: Install InfraPatch CLI
+        run: |
+          python -m pip install .
+        shell: bash
+
+      - name: Run InfraPatch report
+        shell: bash
+        run: infrapatch --debug report --dump-json-statistics
+
+      - name: Check report result
+        shell: pwsh
+        run: |
+          $report = Get-Content $env:report_json_file -Raw | ConvertFrom-Json
+          if ( -not $report.total_resources -gt 0 ) {
+            throw "Failed to get resources"
+          }
+          if ( $report.resources_patched -ne 0 ) {
+              throw "No resources should be patched"
+          }
+          if ( $report.errors -gt 0 ) {
+              throw "Errors have been detected"
+          }
+
+      - name: Run InfraPatch update
+        shell: bash
+        run: infrapatch --debug update --dump-json-statistics --confirm
+
+      - name: Check update result
+        shell: pwsh
+        run: |
+          $report = Get-Content $env:report_json_file -Raw | ConvertFrom-Json
+          if ( -not $report.total_resources -gt 0 ) {
+            throw "Failed to get resources"
+          }
+          if ( -not ( $report.resources_patched -gt 3 ) ) {
+              throw "No resources should be patched"
+          }
+          if ( $report.errors -gt 0 ) {
+              throw "Errors have been detected"
+          }
+          
+          

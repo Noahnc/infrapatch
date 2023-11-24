@@ -1,1 +1,4 @@
 ruff
+pytest
+pytest-md
+pytest-emoji

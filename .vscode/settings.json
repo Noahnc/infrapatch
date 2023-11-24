@@ -40,4 +40,10 @@
   "editor.guides.bracketPairs": true,
   "editor.guides.highlightActiveBracketPair": true,
   "editor.guides.bracketPairsHorizontal": false,
+  "python.defaultInterpreterPath": "/usr/local/bin/python",
+  "python.testing.pytestArgs": [
+    "."
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
 }

@@ -1,0 +1,36 @@
+name: InfraPatch Checks
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+    branches:
+      - main
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+
+  check_code:
+    uses: ./.github/workflows/check_format_and_lint.yml
+
+  unit_tests:
+    needs: check_code
+    uses: ./.github/workflows/unit_tests.yml
+
+  cli_integration_test:
+    needs:  unit_tests
+    uses: ./.github/workflows/cli_integration_test.yml
+
+  github_action_integration_test:
+    needs:  unit_tests
+    uses: ./.github/workflows/action_integration_test.yml
+

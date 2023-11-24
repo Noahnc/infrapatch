@@ -1,14 +1,7 @@
 name: "GitHub Action integration test"
 
-permissions:
-  contents: write
-  pull-requests: write
-
 on:
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   integration-test:
@@ -19,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run in report only mode
         uses: ./
