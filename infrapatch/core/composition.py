@@ -86,7 +86,7 @@ class MainHandler:
 
     # noinspection PyUnboundLocalVariable
     def update_resources(
-        self, resources: Sequence[VersionedTerraformResource], confirm: bool, working_dir: Path, commit_changes: bool = False
+        self, resources: Sequence[VersionedTerraformResource], confirm: bool, working_dir: Path, repo_root: Path, commit_changes: bool = False
     ) -> Sequence[VersionedTerraformResource]:
         upgradable_resources = get_upgradable_resources(resources)
         if len(upgradable_resources) == 0:

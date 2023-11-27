@@ -98,7 +98,8 @@ jobs:
       - name: Run in update mode
         uses: Noahnc/infrapatch@main
         with:
-          report_only: false 
+          report_only: false
+
 ```
 
 #### Report only Mode
@@ -114,10 +115,20 @@ If you use private registries in your Terraform project, you can specify credent
   - name: Run in update mode
     uses: Noahnc/infrapatch@main
     with:
-      report_only: false
       registry_secrets: |
         spacelift.io=${{ secrets.SPACELIFT_API_TOKEN }}
         <second_registry>=<registry_token>
 ```
 
 Each secret must be specified in a new line with the following format: `<registry_name>=<registry_token>`
+
+#### Working Directory
+
+By default, the Action will run in the root directory of the repository. If you want to only scan a subdirectory, you can specify a subdirectory with the `working_directory_relative` input:
+
+```yaml
+  - name: Run in update mode
+    uses: Noahnc/infrapatch@main
+    with:
+      working_directory: "path/to/terraform/code"
+```

@@ -35,6 +35,19 @@
                 "reveal": "always"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "run tests (pytest)",
+            "type": "shell",
+            "command": "pytest",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
         }
     ]
 }
