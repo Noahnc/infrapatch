@@ -7,6 +7,10 @@ The CLI works by scanning your .tf files for versioned providers and modules and
 ## CLI
 The follwoing chapter describes the CLI usage.
 
+## Supported Platforms
+
+Currently, the CLI supports only MacOS and Linux.
+
 ### Installation
 
 Before installing the CLI, make sure you have Python 3.11 or higher installed.
@@ -101,6 +105,23 @@ jobs:
           report_only: false
 
 ```
+
+#### Providers
+
+InfraPatch supports individual providers to detect and patch versions. Currently, the following providers are available:
+| Name                | Description                            |
+| ------------------- | -------------------------------------- |
+| terraform_modules   | Provider to patch Terraform Modules.   |
+| terraform_providers | Provider to patch Terraform Providers. |
+
+Per default, all providers are enabled. You can only enable specific providers by specifying the provider names as comma separated list in the input `enabled_providers`:
+  
+  ```yaml
+    - name: Run in update mode
+      uses: Noahnc/infrapatch@main
+      with:
+        enabled_providers: terraform_modules,terraform_providers
+  ```
 
 #### Report only Mode
 

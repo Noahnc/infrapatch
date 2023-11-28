@@ -70,7 +70,7 @@ jobs:
             throw "Failed to get resources"
           }
           if ( -not ( $report.resources_patched -gt 3 ) ) {
-              throw "No resources should be patched"
+              throw "At least 3 resources should be patched"
           }
           if ( $report.errors -gt 0 ) {
               throw "Errors have been detected"

@@ -26,6 +26,10 @@ inputs:
     description: "Only report new versions. Do not update files. Defaults to false"
     default: "false"
     required: true
+  enabled_providers:
+    description: "Comma separated list of provider names to enable. Defaults to terraform_modules,terraform_providers"
+    default: "terraform_modules,terraform_providers"
+    required: true
   registry_secrets:
     description: "Registry secrets to use for private registries. Needs to be a newline separated list of secrets in the format <registry_domain>:<secret_name>. Defaults to empty"
     required: false
@@ -93,6 +97,7 @@ runs:
         REPORT_ONLY: ${{ inputs.report_only }}
         REGISTRY_SECRET_STRING: ${{ inputs.REGISTRY_SECRETS }}
         WORKING_DIRECTORY_RELATIVE: ${{ inputs.working_directory_relative }}
+        ENABLED_PROVIDERS: ${{ inputs.enabled_providers }}
 
         # Calculated config from other steps
         HEAD_BRANCH: ${{ steps.branch.outputs.head }}

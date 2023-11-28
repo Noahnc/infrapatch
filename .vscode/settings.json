@@ -34,6 +34,7 @@
     "source.unusedImports",
     "source.convertImportFormat"
   ],
+  "python.analysis.extraPaths": [],
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.diagnosticMode": "workspace",
   "editor.guides.indentation": false,
@@ -48,5 +49,9 @@
   "python.testing.pytestEnabled": true,
   "files.exclude": {
     "**/__pycache__": true
+  },
+  "python.analysis.autoSearchPaths": false,
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
   }
 }

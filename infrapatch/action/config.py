@@ -15,6 +15,7 @@ class ActionConfigProvider:
     repository_name: str
     default_registry_domain: str
     working_directory: Path
+    enabled_providers: list[str]
     repository_root: Path
     report_only: bool
     registry_secrets: dict[str, str]
@@ -25,6 +26,7 @@ class ActionConfigProvider:
         self.target_branch = _get_value_from_env("TARGET_BRANCH")
         self.repository_name = _get_value_from_env("REPOSITORY_NAME")
         self.repository_root = Path(os.getcwd())
+        self.enabled_providers = _get_value_from_env("ENABLED_PROVIDERS", default="").split(",")
         self.working_directory = self.repository_root.joinpath(_get_value_from_env("WORKING_DIRECTORY_RELATIVE", default=""))
         self.default_registry_domain = _get_value_from_env("DEFAULT_REGISTRY_DOMAIN")
         self.registry_secrets = _get_credentials_from_string(_get_value_from_env("REGISTRY_SECRET_STRING", secret=True, default=""))

@@ -1,25 +1,31 @@
 import json
 import logging as log
 from distutils.version import StrictVersion
+from typing import Protocol
 from urllib import request
 from urllib.parse import urlparse
 
 from infrapatch.core.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider
 
 
-class RegistryNotFoundException(BaseException):
+class RegistryNotFoundException(Exception):
     pass
 
 
-class RegistryMetadataException(BaseException):
+class RegistryMetadataException(Exception):
     pass
 
 
-class ResourceNotFoundException(BaseException):
+class ResourceNotFoundException(Exception):
     pass
 
 
-class RegistryHandler:
+class RegistryHandlerInterface(Protocol):
+    def get_newest_version(self, resource: VersionedTerraformResource):
+        ...
+
+
+class RegistryHandler(RegistryHandlerInterface):
     def __init__(self, default_registry_domain: str, credentials: dict):
         self.default_registry_domain = default_registry_domain
         self.cached_registry_metadata = {}
