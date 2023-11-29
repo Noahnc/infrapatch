@@ -55,14 +55,18 @@ class VersionedResource:
     def set_patched(self):
         self._status = ResourceStatus.PATCHED
 
-    def has_tile_constraint(self):
-        return re.match(r"^~>[0-9]+\.[0-9]+\.[0-9]+$", self.current_version)
+    def has_tile_constraint(self) -> bool:
+        result = re.match(r"^~>[0-9]+\.[0-9]+\.[0-9]+$", self.current_version)
+        if result is None:
+            return False
+        return True
 
     def set_patch_error(self):
         self._status = ResourceStatus.PATCH_ERROR
 
     def find(self, resources):
-        return [resource for resource in resources if resource.name == self.name and resource._source_file == self._source_file]
+        result = [resource for resource in resources if resource.name == self.name and resource._source_file == self._source_file]
+        return result
 
     def installed_version_equal_or_newer_than_new_version(self):
         if self.newest_version is None:

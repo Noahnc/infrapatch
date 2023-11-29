@@ -2,9 +2,10 @@ import json
 import logging as log
 from pathlib import Path
 from typing import Sequence, Union
-from rich import progress
+
 from git import Repo
 from pytablewriter import MarkdownTableWriter
+from rich import progress
 from rich.console import Console
 
 from infrapatch.core.models.statistics import ProviderStatistics, Statistics
@@ -25,8 +26,16 @@ class ProviderHandler:
 
     def get_resources(self, disable_cache: bool = False) -> dict[str, Sequence[VersionedResource]]:
         for provider_name, provider in self.providers.items():
-            if not disable_cache and provider_name not in self._resource_cache:
+            if provider_name not in self._resource_cache:
+                log.debug(f"Fetching resources for provider {provider.get_provider_name()} since cache is empty.")
                 self._resource_cache[provider.get_provider_name()] = provider.get_resources()
+                continue
+            elif disable_cache:
+                log.debug(f"Fetching resources for provider {provider.get_provider_name()} since cache is disabled.")
+                self._resource_cache[provider.get_provider_name()] = provider.get_resources()
+                continue
+            else:
+                log.debug(f"Using cached resources for provider {provider.get_provider_name()}.")
         return self._resource_cache
 
     def get_upgradable_resources(self, disable_cache: bool = False) -> dict[str, Sequence[VersionedResource]]:
@@ -119,7 +128,7 @@ class ProviderHandler:
         table = self._get_statistics(disable_cache).get_rich_table()
         self.console.print(table)
 
-    def get_markdown_tables(self) -> list[MarkdownTableWriter]:
+    def get_markdown_table_for_changed_resources(self) -> list[MarkdownTableWriter]:
         if self._resource_cache is None:
             raise Exception("No resources found. Run get_resources() first.")
 
@@ -128,17 +137,23 @@ class ProviderHandler:
             changed_resources = [
                 resource for resource in self._resource_cache[provider_name] if resource.status == ResourceStatus.PATCHED or resource.status == ResourceStatus.PATCH_ERROR
             ]
+            if len(changed_resources) == 0:
+                log.debug(f"No changed resources found for provider {provider_name}. Skipping.")
+                continue
             markdown_tables.append(provider.get_markdown_table(changed_resources))
         return markdown_tables
 
-    def set_resources_patched_based_on_existing_resources(self, resources: dict[str, Sequence[VersionedResource]]) -> None:
+    def set_resources_patched_based_on_existing_resources(self, original_resources: dict[str, Sequence[VersionedResource]]) -> None:
         for provider_name, provider in self.providers.items():
-            current_resources = resources[provider_name]
-            for resource in resources[provider_name]:
-                current_resource = resource.find(current_resources)
-                if len(current_resource) == 0:
-                    log.info(f"Resource '{resource.name}' not found in current resources. Skipping.")
+            original_resources_provider = original_resources[provider_name]
+            for i, resource in enumerate(self._resource_cache[provider_name]):
+                found_resources = resource.find(original_resources_provider)
+                if len(found_resources) == 0:
+                    log.debug(f"Resource '{resource.name}' not found in original resources. Skipping update.")
                     continue
-                if len(current_resource) > 1:
+                if len(found_resources) > 1:
                     raise Exception(f"Found multiple resources with the same name: {resource.name}")
-                current_resource[0].set_patched()
+                log.debug(f"Updating resource '{resource.name}' from provider {provider_name} with original resource.")
+                found_resource = found_resources[0]
+                found_resource.set_patched()
+                self._resource_cache[provider_name][i] = found_resource  # type: ignore

@@ -1,7 +1,7 @@
 import logging as log
 import re
 from dataclasses import dataclass
-from typing import Optional, Sequence, Union
+from typing import Optional, Union
 
 from infrapatch.core.models.versioned_resource import VersionedResource
 
@@ -93,11 +93,3 @@ class TerraformProvider(VersionedTerraformResource):
             self._identifier = source_lower_case
         else:
             raise Exception(f"Source '{source_lower_case}' is not a valid terraform resource source.")
-
-
-def get_upgradable_resources(resources: Sequence[VersionedTerraformResource]) -> Sequence[VersionedTerraformResource]:
-    return [resource for resource in resources if not resource.check_if_up_to_date()]
-
-
-def from_terraform_resources_to_dict_list(terraform_resources: Sequence[VersionedTerraformResource]) -> Sequence[dict]:
-    return [terraform_resource.to_dict() for terraform_resource in terraform_resources]

@@ -46,6 +46,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Run in update mode
         uses: Noahnc/infrapatch@main
@@ -53,6 +55,8 @@ jobs:
           report_only: false
 
 ```
+
+> **_NOTE:_**  It's important to set the `fetch-depth: 0` in the Checkout step, otherwise rebases performed by InfraPatch will not work correctly.
 
 ### Example PR
 

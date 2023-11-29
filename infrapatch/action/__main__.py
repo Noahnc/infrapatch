@@ -50,7 +50,7 @@ def main(debug: bool):
     upgradable_resources_head_branch = None
     pr = None
     if github_target_branch is not None and config.report_only is False:
-        pr = get_pr(github_repo, config.head_branch, config.target_branch)
+        pr = get_pr(github_repo, head=config.target_branch, base=config.head_branch)
         if pr is not None:
             upgradable_resources_head_branch = provider_handler.get_upgradable_resources()
         log.info(f"Branch {config.target_branch} already exists. Checking out...")
@@ -68,6 +68,10 @@ def main(debug: bool):
 
     if provider_handler.check_if_upgrades_available() is False:
         log.info("No resources with pending upgrade found.")
+        if pr is not None and upgradable_resources_head_branch is not None:
+            log.info("Updating PR Body...")
+            provider_handler.set_resources_patched_based_on_existing_resources(upgradable_resources_head_branch)
+            update_pr_body(pr, provider_handler)
         return
 
     if github_target_branch is None:
@@ -79,22 +83,30 @@ def main(debug: bool):
     if upgradable_resources_head_branch is not None:
         log.info("Updating status of resources from previous branch...")
         provider_handler.set_resources_patched_based_on_existing_resources(upgradable_resources_head_branch)
+
     provider_handler.print_statistics_table()
     provider_handler.dump_statistics()
 
     git.push(["-f", "-u", "origin", config.target_branch])
 
-    body = get_pr_body(provider_handler)
-
     if pr is not None:
+        update_pr_body(pr, provider_handler)
+        return
+    create_pr(github_repo, config.head_branch, config.target_branch, provider_handler)
+
+
+def update_pr_body(pr, provider_handler):
+    if pr is not None:
+        log.info("Updating existing pull request with new body.")
+        body = get_pr_body(provider_handler)
+        log.debug(f"Pull request body:\n{body}")
         pr.edit(body=body)
         return
-    create_pr(github_repo, config.head_branch, config.target_branch, body)
 
 
 def get_pr_body(provider_handler: ProviderHandler) -> str:
     body = ""
-    markdown_tables = provider_handler.get_markdown_tables()
+    markdown_tables = provider_handler.get_markdown_table_for_changed_resources()
     for table in markdown_tables:
         body += table.dumps()
         body += "\n"
@@ -104,17 +116,34 @@ def get_pr_body(provider_handler: ProviderHandler) -> str:
     return body
 
 
-def get_pr(repo: Repository, head_branch, target_branch) -> Union[PullRequest, None]:
-    pull = repo.get_pulls(state="open", sort="created", base=head_branch, head=target_branch)
-    if pull.totalCount != 0:
-        log.info(f"Pull request found from '{target_branch}' to '{head_branch}'")
-        return pull[0]
-    log.debug(f"No pull request found from '{target_branch}' to '{head_branch}'.")
-    return None
+def get_pr(repo: Repository, base: str, head: str) -> Union[PullRequest, None]:
+    base_ref = base
+    head_ref = head
+    if base_ref.startswith("origin/"):
+        base_ref = base_ref[len("origin/") :]
+    if head_ref.startswith("origin/"):
+        head_ref = head_ref[len("origin/") :]
+    pulls = repo.get_pulls(state="open", sort="created", direction="desc")
+
+    if pulls.totalCount == 0:
+        log.debug("No pull request found")
+        return None
+
+    pr = [pr for pr in pulls if pr.base.ref == base_ref and pr.head.ref == head_ref]
+    if len(pr) == 0:
+        log.debug(f"No pull request found from '{head}' to '{base}'.")
+        return None
+    elif len(pr) == 1:
+        log.debug(f"Pull request found from '{head}' to '{base}'.")
+        return pr[0]
+    if len(pr) > 1:
+        raise Exception(f"Multiple pull requests found from '{head}' to '{base}'.")
 
 
-def create_pr(repo: Repository, head_branch: str, target_branch: str, body: str) -> PullRequest:
+def create_pr(repo: Repository, head_branch: str, target_branch: str, provider_handler: ProviderHandler) -> PullRequest:
+    body = get_pr_body(provider_handler)
     log.info(f"Creating new pull request from '{target_branch}' to '{head_branch}'.")
+    log.debug(f"Pull request body:\n{body}")
     return repo.create_pull(title="InfraPatch Module and Provider Update", body=body, base=head_branch, head=target_branch)
 
 
