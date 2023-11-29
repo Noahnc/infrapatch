@@ -67,7 +67,7 @@ def test_action_config_init(working_directory_relative_path):
     assert config.working_directory == Path(os.getcwd()).joinpath(working_directory_relative_path)
     assert config.repository_root == Path(os.getcwd())
     assert config.default_registry_domain == "registry.example.com"
-    assert config.registry_secrets == {"test_registry.ch": "abc123"}
+    assert config.terraform_registry_secrets == {"test_registry.ch": "abc123"}
     assert config.report_only is False
 
     # Test case 2: Missing values in os.environ

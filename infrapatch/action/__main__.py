@@ -32,7 +32,7 @@ def main(debug: bool):
     builder = ProviderHandlerBuilder(config.working_directory)
     builder.with_git_integration()
     if "terraform_modules" in config.enabled_providers or "terraform_providers" in config.enabled_providers:
-        builder.add_terraform_registry_configuration(config.default_registry_domain, config.registry_secrets)
+        builder.add_terraform_registry_configuration(config.default_registry_domain, config.terraform_registry_secrets)
     if "terraform_modules" in config.enabled_providers:
         builder.with_terraform_module_provider()
     if "terraform_providers" in config.enabled_providers:

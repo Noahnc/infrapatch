@@ -1,7 +1,7 @@
+import logging as log
 import os
 from pathlib import Path
 from typing import Any
-import logging as log
 
 
 class MissingConfigException(Exception):
@@ -18,7 +18,7 @@ class ActionConfigProvider:
     enabled_providers: list[str]
     repository_root: Path
     report_only: bool
-    registry_secrets: dict[str, str]
+    terraform_registry_secrets: dict[str, str]
 
     def __init__(self) -> None:
         self.github_token = _get_value_from_env("GITHUB_TOKEN", secret=True)
@@ -29,7 +29,7 @@ class ActionConfigProvider:
         self.enabled_providers = _get_value_from_env("ENABLED_PROVIDERS", default="").split(",")
         self.working_directory = self.repository_root.joinpath(_get_value_from_env("WORKING_DIRECTORY_RELATIVE", default=""))
         self.default_registry_domain = _get_value_from_env("DEFAULT_REGISTRY_DOMAIN")
-        self.registry_secrets = _get_credentials_from_string(_get_value_from_env("REGISTRY_SECRET_STRING", secret=True, default=""))
+        self.terraform_registry_secrets = _get_credentials_from_string(_get_value_from_env("TERRAFORM_REGISTRY_SECRET_STRING", secret=True, default=""))
         self.report_only = _from_env_to_bool(_get_value_from_env("REPORT_ONLY", default="False").lower())
 
 

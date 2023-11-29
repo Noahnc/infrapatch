@@ -130,13 +130,13 @@ When setting the input `report_only` to `true`, the Action will only report avai
 
 #### Authentication
 
-If you use private registries in your Terraform project, you can specify credentials for the Action with the Input `registry_secrets`:
+If you use private registries in your Terraform project, you can specify credentials for the Action with the Input `terraform_registry_secrets`:
 
 ```yaml
   - name: Run in update mode
     uses: Noahnc/infrapatch@main
     with:
-      registry_secrets: |
+      terraform_registry_secrets: |
         spacelift.io=${{ secrets.SPACELIFT_API_TOKEN }}
         <second_registry>=<registry_token>
 ```
