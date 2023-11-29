@@ -1,10 +1,10 @@
-# infrapatch
+# InfraPatch
 CLI Tool and GitHub Action to patch your Terraform Code
 
-Infrapatch is a CLI tool and GitHub Action to patch the Provider and Module dependencies in your Terraform Code.
+InfraPatch is a CLI tool and GitHub Action to patch the Provider and Module dependencies in your Terraform Code.
 The CLI works by scanning your .tf files for versioned providers and modules and then updating the version to the latest available version.
 
-- [infrapatch](#infrapatch)
+- [InfraPatch](#infrapatch)
   - [GitHub Action](#github-action)
     - [Example PR](#example-pr)
     - [Providers](#providers)
