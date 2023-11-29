@@ -95,6 +95,9 @@ class HclHandler(HclHandlerInterface):
                 if "source" not in value:
                     log.debug(f"Skipping module '{module_name}' because it has no source attribute.")
                     continue
+                if "version" not in value:
+                    log.debug(f"Skipping module '{module_name}' because it has no version attribute.")
+                    continue
                 found_resources.append(TerraformModule(name=module_name, _source=value["source"], current_version=value["version"], _source_file=tf_file.absolute().as_posix()))
         return found_resources
 
