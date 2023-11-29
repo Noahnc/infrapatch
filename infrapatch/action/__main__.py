@@ -30,7 +30,7 @@ def main(debug: bool):
         raise Exception("No providers enabled. Please enable at least one provider.")
 
     builder = ProviderHandlerBuilder(config.working_directory)
-    builder.with_git_integration()
+    builder.with_git_integration(config.repository_root)
     if "terraform_modules" in config.enabled_providers or "terraform_providers" in config.enabled_providers:
         builder.add_terraform_registry_configuration(config.default_registry_domain, config.terraform_registry_secrets)
     if "terraform_modules" in config.enabled_providers:

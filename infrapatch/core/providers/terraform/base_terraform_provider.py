@@ -37,7 +37,7 @@ class TerraformProvider(BaseProviderInterface):
             return []
 
         resources = []
-        for terraform_file in progress.track(terraform_files, description=f"Parsing .tf files for {self.get_provider_name()}..."):
+        for terraform_file in progress.track(terraform_files, description=f"Parsing .tf files for {self.get_provider_display_name()}..."):
             if self.get_provider_name() == "terraform_modules":
                 resources.extend(self.hcl_handler.get_terraform_resources_from_file(terraform_file, get_modules=True, get_providers=False))
 
@@ -47,7 +47,7 @@ class TerraformProvider(BaseProviderInterface):
             else:
                 raise Exception(f"Provider name '{self.get_provider_name()}' is not implemented.")
 
-        for resource in progress.track(resources, description="Getting newest resource versions..."):
+        for resource in progress.track(resources, description=f"Getting newest resource versions for Provider {self.get_provider_display_name()}..."):
             resource.newest_version = self.registry_handler.get_newest_version(resource)
         return resources
 

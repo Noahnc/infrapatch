@@ -20,7 +20,7 @@ class ProviderHandlerBuilder:
         self.providers = []
         self.working_directory = working_directory
         self.registry_handler = None
-        self.git_integration = False
+        self.git_repo = None
         pass
 
     def add_terraform_registry_configuration(self, default_registry_domain: str, credentials: dict[str, str]) -> Self:
@@ -45,16 +45,14 @@ class ProviderHandlerBuilder:
         self.providers.append(tf_module_provider)
         return self
 
-    def with_git_integration(self) -> Self:
+    def with_git_integration(self, git_working_directory: Path) -> Self:
         log.debug("Enabling Git integration.")
         self.git_integration = True
+        self.git_repo = Repo(git_working_directory)
         return self
 
     def build(self) -> ProviderHandler:
         if len(self.providers) == 0:
             raise Exception("No providers added to ProviderHandlerBuilder.")
         statistics_file = self.working_directory.joinpath(f"{cs.APP_NAME}_Statistics.json")
-        git_repo = None
-        if self.git_integration:
-            git_repo = Repo(self.working_directory)
-        return ProviderHandler(providers=self.providers, console=Console(width=const.CLI_WIDTH), statistics_file=statistics_file, repo=git_repo)
+        return ProviderHandler(providers=self.providers, console=Console(width=const.CLI_WIDTH), statistics_file=statistics_file, repo=self.git_repo)

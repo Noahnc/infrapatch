@@ -53,9 +53,10 @@ def test_action_config_init(working_directory_relative_path):
     os.environ["HEAD_BRANCH"] = "main"
     os.environ["TARGET_BRANCH"] = "develop"
     os.environ["REPOSITORY_NAME"] = "my-repo"
+    os.environ["REPOSITORY_ROOT"] = "/repository/root"
     os.environ["WORKING_DIRECTORY_RELATIVE"] = working_directory_relative_path
     os.environ["DEFAULT_REGISTRY_DOMAIN"] = "registry.example.com"
-    os.environ["REGISTRY_SECRET_STRING"] = "test_registry.ch=abc123"
+    os.environ["TERRAFORM_REGISTRY_SECRET_STRING"] = "test_registry.ch=abc123"
     os.environ["REPORT_ONLY"] = "False"
 
     config = ActionConfigProvider()
@@ -64,8 +65,8 @@ def test_action_config_init(working_directory_relative_path):
     assert config.head_branch == "main"
     assert config.target_branch == "develop"
     assert config.repository_name == "my-repo"
-    assert config.working_directory == Path(os.getcwd()).joinpath(working_directory_relative_path)
-    assert config.repository_root == Path(os.getcwd())
+    assert config.working_directory == config.repository_root.joinpath(working_directory_relative_path)
+    assert config.repository_root == Path("/repository/root")
     assert config.default_registry_domain == "registry.example.com"
     assert config.terraform_registry_secrets == {"test_registry.ch": "abc123"}
     assert config.report_only is False

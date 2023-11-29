@@ -25,7 +25,7 @@ class ActionConfigProvider:
         self.head_branch = _get_value_from_env("HEAD_BRANCH")
         self.target_branch = _get_value_from_env("TARGET_BRANCH")
         self.repository_name = _get_value_from_env("REPOSITORY_NAME")
-        self.repository_root = Path(os.getcwd())
+        self.repository_root = Path(_get_value_from_env("REPOSITORY_ROOT"))
         self.enabled_providers = _get_value_from_env("ENABLED_PROVIDERS", default="").split(",")
         self.working_directory = self.repository_root.joinpath(_get_value_from_env("WORKING_DIRECTORY_RELATIVE", default=""))
         self.default_registry_domain = _get_value_from_env("DEFAULT_REGISTRY_DOMAIN")

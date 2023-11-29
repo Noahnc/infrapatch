@@ -2,6 +2,7 @@ import json
 import logging as log
 from pathlib import Path
 from typing import Sequence, Union
+from rich import progress
 from git import Repo
 from pytablewriter import MarkdownTableWriter
 from rich.console import Console
@@ -50,7 +51,7 @@ class ProviderHandler:
             return False
         upgradable_resources = self.get_upgradable_resources()
         for provider_name, resources in upgradable_resources.items():
-            for resource in resources:
+            for resource in progress.track(resources, description=f"Upgrading resources for Provider {self.providers[provider_name].get_provider_display_name()}..."):
                 try:
                     resource = self.providers[provider_name].patch_resource(resource)
                 except Exception as e:
