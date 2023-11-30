@@ -14,20 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Evaluate token to use
-        id: token
-        shell: bash
-        run: |
-          # Check if the secrets.PAT_GITHUB is set, if not use the default GITHUB_TOKEN
-          if [ "${{ secrets.PAT_GITHUB }}" != "" ]; then
-            echo "Secret PAT_GITHUB is set, using it instead of GITHUB_TOKEN"
-            echo "::set-output name=token::${{ secrets.PAT_GITHUB }}"
-          else
-            echo "Secret PAT_GITHUB is not set, actions default token GITHUB_TOKEN"
-            echo "::set-output name=token::${{ github.token }}"
-          fi
-          fi
-
       - name: Run in report only mode
         uses: ./
         with:
@@ -39,7 +25,7 @@ jobs:
         with:
           report_only: false
           target_branch_name: "feat/infrapatch_test_${{ github.run_number }}"
-          github_token: ${{ steps.token.outputs.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check update result
         shell: pwsh
