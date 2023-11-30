@@ -25,7 +25,6 @@ jobs:
         with:
           report_only: false
           target_branch_name: "feat/infrapatch_test_${{ github.run_number }}"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check update result
         shell: pwsh
