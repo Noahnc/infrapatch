@@ -1,109 +1,150 @@
 import logging as log
-import subprocess
-from pathlib import Path
+from typing import Union
 
 import click
-from github import Auth, Github
+from github import Auth, Github, GithubException
 from github.PullRequest import PullRequest
+from github.Repository import Repository
 
-from infrapatch.core.composition import build_main_handler
+from infrapatch.action.config import ActionConfigProvider
 from infrapatch.core.log_helper import catch_exception, setup_logging
-from infrapatch.core.models.versioned_terraform_resources import get_upgradable_resources
+from infrapatch.core.provider_handler import ProviderHandler
+from infrapatch.core.provider_handler_builder import ProviderHandlerBuilder
+from infrapatch.core.utils.git import Git
 
 
 @click.group(invoke_without_command=True)
 @click.option("--debug", is_flag=True)
-@click.option("--default-registry-domain")
-@click.option("--registry-secrets-string", default=None)
-@click.option("--github-token")
-@click.option("--target-branch")
-@click.option("--head-branch")
-@click.option("--repository-name")
-@click.option("--report-only", is_flag=True)
-@click.option("--working-directory")
 @catch_exception(handle=Exception)
-def main(
-    debug: bool,
-    default_registry_domain: str,
-    registry_secrets_string: str,
-    github_token: str,
-    target_branch: str,
-    head_branch: str,
-    repository_name: str,
-    report_only: bool,
-    working_directory: Path,
-):
+def main(debug: bool):
     setup_logging(debug)
-    log.debug(
-        f"Running infrapatch with the following parameters: "
-        f"default_registry_domain={default_registry_domain}, "
-        f"registry_secrets_string={registry_secrets_string}, "
-        f"github_token={github_token}, "
-        f"report_only={report_only}, "
-        f"working_directory={working_directory}"
-    )
-    credentials = {}
-    working_directory = Path(working_directory)
-    if registry_secrets_string is not None:
-        credentials = get_credentials_from_string(registry_secrets_string)
-    main_handler = build_main_handler(default_registry_domain=default_registry_domain, credentials_dict=credentials)
-    resources = main_handler.get_all_terraform_resources(working_directory)
 
-    if report_only:
-        main_handler.print_resource_table(resources)
+    config = ActionConfigProvider()
+
+    git = Git(config.repository_root)
+    github = Github(auth=Auth.Token(config.github_token))
+    github_repo = github.get_repo(config.repository_name)
+    github_head_branch = github_repo.get_branch(config.head_branch)
+
+    if len(config.enabled_providers) == 0:
+        raise Exception("No providers enabled. Please enable at least one provider.")
+
+    builder = ProviderHandlerBuilder(config.working_directory)
+    builder.with_git_integration(config.repository_root)
+    if "terraform_modules" in config.enabled_providers or "terraform_providers" in config.enabled_providers:
+        builder.add_terraform_registry_configuration(config.default_registry_domain, config.terraform_registry_secrets)
+    if "terraform_modules" in config.enabled_providers:
+        builder.with_terraform_module_provider()
+    if "terraform_providers" in config.enabled_providers:
+        builder.with_terraform_provider_provider()
+
+    provider_handler = builder.build()
+
+    git.fetch_origin()
+
+    try:
+        github_target_branch = github_repo.get_branch(config.target_branch)
+    except GithubException:
+        github_target_branch = None
+
+    upgradable_resources_head_branch = None
+    pr = None
+    if github_target_branch is not None and config.report_only is False:
+        pr = get_pr(github_repo, head=config.target_branch, base=config.head_branch)
+        if pr is not None:
+            upgradable_resources_head_branch = provider_handler.get_upgradable_resources()
+        log.info(f"Branch {config.target_branch} already exists. Checking out...")
+        git.checkout_branch(config.target_branch, f"origin/{config.target_branch}")
+
+        log.info(f"Rebasing branch {config.target_branch} onto origin/{config.head_branch}")
+        git.run_git_command(["rebase", "-Xtheirs", f"origin/{config.head_branch}"])
+        git.push(["-f", "-u", "origin", config.target_branch])
+
+    provider_handler.print_resource_table(only_upgradable=True, disable_cache=True)
+
+    if config.report_only:
         log.info("Report only mode is enabled. No changes will be applied.")
         return
 
-    upgradable_resources = get_upgradable_resources(resources)
-    if len(upgradable_resources) == 0:
-        log.info("No upgradable resources found.")
+    if provider_handler.check_if_upgrades_available() is False:
+        log.info("No resources with pending upgrade found.")
+        if pr is not None and upgradable_resources_head_branch is not None:
+            log.info("Updating PR Body...")
+            provider_handler.set_resources_patched_based_on_existing_resources(upgradable_resources_head_branch)
+            update_pr_body(pr, provider_handler)
         return
 
-    main_handler.update_resources(upgradable_resources, True, working_directory, True)
-    main_handler.dump_statistics(upgradable_resources, save_as_json_file=True)
+    if github_target_branch is None:
+        log.info(f"Branch {config.target_branch} does not exist. Creating and checking out...")
+        github_repo.create_git_ref(ref=f"refs/heads/{config.target_branch}", sha=github_head_branch.commit.sha)
+        git.checkout_branch(config.target_branch, f"origin/{config.head_branch}")
 
-    push_changes(target_branch, working_directory)
+    provider_handler.upgrade_resources()
+    if upgradable_resources_head_branch is not None:
+        log.info("Updating status of resources from previous branch...")
+        provider_handler.set_resources_patched_based_on_existing_resources(upgradable_resources_head_branch)
 
-    create_pr(github_token, head_branch, repository_name, target_branch)
+    provider_handler.print_statistics_table()
+    provider_handler.dump_statistics()
 
+    git.push(["-f", "-u", "origin", config.target_branch])
 
-def push_changes(target_branch, working_directory):
-    command = ["git", "push", "-f", "-u", "origin", target_branch]
-    log.debug(f"Executing command: {' '.join(command)}")
-    try:
-        result = subprocess.run(command, capture_output=True, text=True, cwd=working_directory.absolute().as_posix())
-    except Exception as e:
-        raise Exception(f"Error pushing to remote: {e}")
-    if result.returncode != 0:
-        log.error(f"Stdout: {result.stdout}")
-        raise Exception(f"Error pushing to remote: {result.stderr}")
-
-
-def create_pr(github_token, head_branch, repository_name, target_branch) -> PullRequest:
-    token = Auth.Token(github_token)
-    github = Github(auth=token)
-    repo = github.get_repo(repository_name)
-    pull = repo.get_pulls(state="open", sort="created", base=head_branch, head=target_branch)
-    if pull.totalCount != 0:
-        log.info(f"Pull request found from '{target_branch}' to '{head_branch}'")
-        return pull[0]
-    log.info(f"No pull request found from '{target_branch}' to '{head_branch}'. Creating a new one.")
-    return repo.create_pull(title="InfraPatch Module and Provider Update", body="InfraPatch Module and Provider Update", base=head_branch, head=target_branch)
+    if pr is not None:
+        update_pr_body(pr, provider_handler)
+        return
+    create_pr(github_repo, config.head_branch, config.target_branch, provider_handler)
 
 
-def get_credentials_from_string(credentials_string: str) -> dict:
-    credentials = {}
-    if credentials_string == "":
-        return credentials
-    for line in credentials_string.splitlines():
-        try:
-            name, token = line.split("=", 1)
-        except ValueError as e:
-            log.debug(f"Secrets line '{line}' could not be split into name and token.")
-            raise Exception(f"Error processing secrets: '{e}'")
-        # add the name and token to the credentials dict
-        credentials[name] = token
-    return credentials
+def update_pr_body(pr, provider_handler):
+    if pr is not None:
+        log.info("Updating existing pull request with new body.")
+        body = get_pr_body(provider_handler)
+        log.debug(f"Pull request body:\n{body}")
+        pr.edit(body=body)
+        return
+
+
+def get_pr_body(provider_handler: ProviderHandler) -> str:
+    body = ""
+    markdown_tables = provider_handler.get_markdown_table_for_changed_resources()
+    for table in markdown_tables:
+        body += table.dumps()
+        body += "\n"
+
+    body += provider_handler._get_statistics().get_markdown_table().dumps()
+    body += "\n"
+    return body
+
+
+def get_pr(repo: Repository, base: str, head: str) -> Union[PullRequest, None]:
+    base_ref = base
+    head_ref = head
+    if base_ref.startswith("origin/"):
+        base_ref = base_ref[len("origin/") :]
+    if head_ref.startswith("origin/"):
+        head_ref = head_ref[len("origin/") :]
+    pulls = repo.get_pulls(state="open", sort="created", direction="desc")
+
+    if pulls.totalCount == 0:
+        log.debug("No pull request found")
+        return None
+
+    pr = [pr for pr in pulls if pr.base.ref == base_ref and pr.head.ref == head_ref]
+    if len(pr) == 0:
+        log.debug(f"No pull request found from '{head}' to '{base}'.")
+        return None
+    elif len(pr) == 1:
+        log.debug(f"Pull request found from '{head}' to '{base}'.")
+        return pr[0]
+    if len(pr) > 1:
+        raise Exception(f"Multiple pull requests found from '{head}' to '{base}'.")
+
+
+def create_pr(repo: Repository, head_branch: str, target_branch: str, provider_handler: ProviderHandler) -> PullRequest:
+    body = get_pr_body(provider_handler)
+    log.info(f"Creating new pull request from '{target_branch}' to '{head_branch}'.")
+    log.debug(f"Pull request body:\n{body}")
+    return repo.create_pull(title="InfraPatch Module and Provider Update", body=body, base=head_branch, head=target_branch)
 
 
 if __name__ == "__main__":

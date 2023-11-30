@@ -2,20 +2,30 @@ import logging as log
 import platform
 import subprocess
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Protocol, Union
 
 
-class HclEditCliException(BaseException):
+class HclEditCliException(Exception):
     pass
 
 
-class HclEditCli:
+class HclEditCliInterface(Protocol):
+    def update_hcl_value(self, resource: str, file: Path, value: str):
+        ...
+
+    def get_hcl_value(self, resource: str, file: Path) -> str:
+        ...
+
+
+class HclEditCli(HclEditCliInterface):
     def __init__(self):
-        pass
+        self._binary_path = self._get_binary_path()
+        if not self._binary_path.exists() and not self._binary_path.is_file():
+            raise Exception(f"Binary '{self._binary_path.absolute().as_posix()}' does not exist.")
 
     def _get_binary_path(self) -> Path:
         current_folder = Path(__file__).parent
-        binary_folder = current_folder.parent.joinpath("bin")
+        binary_folder = current_folder.joinpath("bin")
         if platform.system() == "Windows":
             return binary_folder.joinpath("hcledit_windows.exe")
         elif platform.system() == "Linux":
@@ -35,7 +45,7 @@ class HclEditCli:
         return result
 
     def _run_hcl_edit_command(self, action: str, resource: str, file: Path, value: Union[str, None] = None) -> Optional[str]:
-        command = [self._get_binary_path().absolute().as_posix(), action, resource]
+        command = [self._binary_path.absolute().as_posix(), action, resource]
         if value is not None:
             command.append(value)
         command.append(file.absolute().as_posix())

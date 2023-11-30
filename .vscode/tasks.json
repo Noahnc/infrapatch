@@ -26,6 +26,42 @@
                 "reveal": "always"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "ruff auto-fix",
+            "type": "shell",
+            "command": "ruff",
+            "args": [
+                "check",
+                ".",
+                "--fix"
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "pip install all dependencies",
+            "type": "shell",
+            "command": "pip3 install -r requirements.txt && pip3 install -r requirements-dev.txt",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "run tests (pytest)",
+            "type": "shell",
+            "command": "pytest",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
         }
     ]
 }

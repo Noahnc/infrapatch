@@ -22,21 +22,24 @@ inputs:
     description: "Git email to use for commits. Defaults to bot@infrapatch.ch"
     required: false
     default: "bot@infrapatch.ch"
-  github_token:
-    description: "GitHub access token. Defaults to github.token."
-    default: ${{ github.token }}
   report_only:
     description: "Only report new versions. Do not update files. Defaults to false"
     default: "false"
     required: true
-  registry_secrets:
-    description: "Registry secrets to use for private registries"
+  enabled_providers:
+    description: "Comma separated list of provider names to enable. Defaults to terraform_modules,terraform_providers"
+    default: "terraform_modules,terraform_providers"
+    required: true
+  terraform_registry_secrets:
+    description: "Registry secrets to use for private terraform registries. Needs to be a newline separated list of secrets in the format <registry_domain>:<secret_name>. Defaults to empty"
     required: false
     default: ""
-  working_directory:
-    description: "Working directory to run the command in. Defaults to the root of the repository"
+  working_directory_relative:
+    description: "Working directory to run the action in. Defaults to the root of the repository"
     required: false
-    default: ${{ github.workspace }}
+  github_token:
+    description: "GitHub access token. Defaults to github.token."
+    default: ${{ github.token }}
 outputs:
   target_branch:
     description: "Name of the branch where changes will be pushed to"
@@ -68,60 +71,40 @@ runs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+      working-directory: ${{ github.action_path }}
       shell: bash
-
-    - name: Create target branch
-      id: create_branch
-      if: ${{ inputs.report_only == 'false' }}
-      uses: peterjgrainger/action-create-branch@v2.2.0
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-      with:
-        branch: "refs/heads/${{ inputs.target_branch_name }}"
 
     - name: Configure git
       if: ${{ inputs.report_only }} == 'false' }}
-      working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: |
         git config --global user.name "${{ inputs.git_user }}"
         git config --global user.email "${{ inputs.git_email }}"
 
-    - name: Switch to target branch
-      if: ${{ inputs.report_only == 'false' }}
-      working-directory: ${{ inputs.working_directory }}
-      shell: bash
-      run: |
-        git fetch origin
-        git checkout -b "${{ steps.branch.outputs.target }}" "${{ steps.branch.outputs.target_origin }}"
-
-    - name: Rebase target branch
-      if: ${{ steps.create_branch.outputs.created == 'false' }}
-      working-directory: ${{ inputs.working_directory }}
-      shell: bash
-      run: |
-        echo "Rebasing ${{ steps.branch.outputs.target }} on ${{ steps.branch.outputs.head_origin }}"
-        git rebase -Xtheirs ${{ steps.branch.outputs.head_origin }}
-
     - name: Run InfraPatch Action
+
       shell: bash
+      working-directory: ${{ github.action_path }}
       run: |
         module="infrapatch.action"
         arguments=()
         if [ "${{ runner.debug }}" == "1" ]; then
             arguments+=("--debug")
         fi
-        if [ "${{ inputs.report_only }}" == "true" ]; then
-            arguments+=("--report-only")
-        fi
-        if [ "${{ inputs.registry_secrets }}" != "" ]; then
-            arguments+=("--registry-secrets-string" "\"${{ inputs.registry_secrets }}\"")
-        fi
-        arguments+=("--github-token" "${{ inputs.github_token }}")
-        arguments+=("--head-branch" "${{ steps.branch.outputs.head }}")
-        arguments+=("--target-branch" "${{ steps.branch.outputs.target }}")
-        arguments+=("--repository-name" "${{ inputs.repository_name }}")
-        arguments+=("--working-directory" "${{ inputs.working_directory }}")
-        arguments+=("--default-registry-domain" "${{ inputs.default_registry_domain }}")
         python -m "$module" "${arguments[@]}"
+      env:
+        # Config from inputs
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        DEFAULT_REGISTRY_DOMAIN: ${{ inputs.DEFAULT_REGISTRY_DOMAIN }}
+        REPOSITORY_NAME: ${{ inputs.repository_name }}
+        REPORT_ONLY: ${{ inputs.report_only }}
+        TERRAFORM_REGISTRY_SECRET_STRING: ${{ inputs.terraform_registry_secrets }}
+        WORKING_DIRECTORY_RELATIVE: ${{ inputs.working_directory_relative }}
+        ENABLED_PROVIDERS: ${{ inputs.enabled_providers }}
+
+        REPOSITORY_ROOT: ${{ github.workspace }}
+
+        # Calculated config from other steps
+        HEAD_BRANCH: ${{ steps.branch.outputs.head }}
+        TARGET_BRANCH: ${{ steps.branch.outputs.target }}
 

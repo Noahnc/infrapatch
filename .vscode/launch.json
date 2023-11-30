@@ -10,7 +10,7 @@
                 "--debug",
                 "report"
             ],
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "InfraPatch CLI: Update",
@@ -21,7 +21,7 @@
                 "--debug",
                 "update"
             ],
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "InfraPatch CLI: custom",
@@ -29,7 +29,7 @@
             "request": "launch",
             "module": "infrapatch.cli",
             "args": "${input:custom_args}",
-            "justMyCode": true
+            "justMyCode": false
         }
     ],
     "inputs": [

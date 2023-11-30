@@ -4,7 +4,7 @@ import logging as log
 import infrapatch.core.constants as cs
 from pathlib import Path
 
-from infrapatch.core.utils.hcl_handler import HclHandler
+from infrapatch.core.utils.terraform.hcl_handler import HclHandler
 
 
 def get_registry_credentials(hcl_handler: HclHandler, credentials_file: Union[Path, None] = None) -> dict[str, str]:
