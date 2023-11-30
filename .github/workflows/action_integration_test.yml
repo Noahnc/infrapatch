@@ -21,10 +21,10 @@ jobs:
           # Check if the secrets.PAT_GITHUB is set, if not use the default GITHUB_TOKEN
           if [ "${{ secrets.PAT_GITHUB }}" != "" ]; then
             echo "Secret PAT_GITHUB is set, using it instead of GITHUB_TOKEN"
-            echo "token=${{ secrets.PAT_GITHUB }}" >> $GITHUB_OUTPUT
+            echo "::set-output name=token::${{ secrets.PAT_GITHUB }}"
           else
             echo "Secret PAT_GITHUB is not set, actions default token GITHUB_TOKEN"
-            echo "token=${{ github.token }}" >> $GITHUB_OUTPUT
+            echo "::set-output name=token::${{ github.token }}"
           fi
           fi
 
