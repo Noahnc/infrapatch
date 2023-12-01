@@ -11,6 +11,7 @@ class VersionedTerraformResource(VersionedResource):
     _base_domain: Union[str, None] = None
     _identifier: Union[str, None] = None
     _source: Union[str, None] = None
+    code_source: Union[str, None] = None
 
     @property
     def source(self) -> Union[str, None]:
@@ -31,6 +32,11 @@ class VersionedTerraformResource(VersionedResource):
     def find(self, resources):
         filtered_resources = super().find(resources)
         return [resource for resource in filtered_resources if resource._source == self._source]
+
+    def is_github_hosted(self) -> bool:
+        if self.code_source is None:
+            return False
+        return self.code_source.lower().startswith("https://github.com")
 
 
 @dataclass
