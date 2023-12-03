@@ -1,7 +1,9 @@
-from typing import Protocol, Sequence
+from typing import Protocol, Sequence, Union
+
 from pytablewriter import MarkdownTableWriter
 from rich.table import Table
-from infrapatch.core.models.versioned_resource import VersionedResource
+
+from infrapatch.core.models.versioned_resource import VersionedResource, VersionedResourceReleaseNotes
 
 
 class BaseProviderInterface(Protocol):
@@ -24,4 +26,10 @@ class BaseProviderInterface(Protocol):
         ...
 
     def get_resources_as_dict_list(self, resources: Sequence[VersionedResource]):
+        ...
+
+    def get_resource_release_notes(self, resource: VersionedResource) -> Union[VersionedResourceReleaseNotes, None]:
+        ...
+
+    def get_unique_new_versions(self, resources: Sequence[VersionedResource]) -> Sequence[VersionedResource]:
         ...
