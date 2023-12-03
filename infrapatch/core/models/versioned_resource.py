@@ -3,6 +3,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, Union
+from urllib.parse import urlparse
+import git
 
 import semantic_version
 
@@ -20,6 +22,7 @@ class VersionedResource:
     _source_file: str
     _newest_version: Union[str, None] = None
     _status: str = ResourceStatus.UNPATCHED
+    _github_repo: Union[str, None] = None
 
     @property
     def source_file(self) -> Path:
@@ -28,6 +31,10 @@ class VersionedResource:
     @property
     def status(self) -> str:
         return self._status
+
+    @property
+    def github_repo(self) -> Union[str, None]:
+        return self._github_repo
 
     @property
     def resource_name(self):
@@ -51,6 +58,15 @@ class VersionedResource:
             self._newest_version = f"~>{version}"
             return
         self._newest_version = version
+
+    def set_github_repo(self, github_repo_url: str):
+        url = urlparse(github_repo_url)
+        if url.path is None or url.path == "" or url.path == "/":
+            raise Exception(f"Invalid github repo url '{github_repo_url}'.")
+        path = url.path
+        if path.endswith(".git"):
+            path = path[:-4]
+        self._github_repo = "/".join(path.split("/")[1:3])
 
     def set_patched(self):
         self._status = ResourceStatus.PATCHED
@@ -106,3 +122,9 @@ class VersionedResource:
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)
+
+
+@dataclass
+class VersionedResourceReleaseNotes:
+    resource: VersionedResource
+    body: str

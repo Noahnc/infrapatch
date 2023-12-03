@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from infrapatch.core.models.versioned_resource import ResourceStatus, VersionedResource
 
 
@@ -38,6 +40,24 @@ def test_tile_constraint():
     assert resource.newest_version == "~>1.1.0"
 
 
+def test_git_repo():
+    resource = VersionedResource(name="test_resource", current_version="~>1.0.0", _source_file="test_file.py")
+
+    assert resource.github_repo is None
+
+    resource.set_github_repo("https://github.com/noahnc/test_repo.git")
+    assert resource.github_repo == "noahnc/test_repo"
+
+    resource.set_github_repo("https://github.com/noahnc/test_repo")
+    assert resource.github_repo == "noahnc/test_repo"
+
+    with pytest.raises(Exception):
+        resource.set_github_repo("https://github.com/")
+
+    with pytest.raises(Exception):
+        resource.set_github_repo("https://github.com")
+
+
 def test_patch_error():
     resource = VersionedResource(name="test_resource", current_version="1.0.0", _source_file="test_file.py")
     resource.set_patch_error()
@@ -66,5 +86,12 @@ def test_find():
 
 def test_versioned_resource_to_dict():
     resource = VersionedResource(name="test_resource", current_version="1.0.0", _source_file="test_file.py")
-    expected_dict = {"name": "test_resource", "current_version": "1.0.0", "_source_file": "test_file.py", "_newest_version": None, "_status": ResourceStatus.UNPATCHED}
+    expected_dict = {
+        "name": "test_resource",
+        "current_version": "1.0.0",
+        "_source_file": "test_file.py",
+        "_newest_version": None,
+        "_status": ResourceStatus.UNPATCHED,
+        "_github_repo": None,
+    }
     assert resource.to_dict() == expected_dict
