@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, Union
 from urllib.parse import urlparse
-import git
+import logging as log
 
 import semantic_version
 
@@ -20,9 +20,9 @@ class VersionedResource:
     name: str
     current_version: str
     _source_file: str
-    _newest_version: Union[str, None] = None
+    _newest_version: Optional[str] = None
     _status: str = ResourceStatus.UNPATCHED
-    _github_repo: Union[str, None] = None
+    _github_repo: Optional[str] = None
 
     @property
     def source_file(self) -> Path:
@@ -66,7 +66,9 @@ class VersionedResource:
         path = url.path
         if path.endswith(".git"):
             path = path[:-4]
-        self._github_repo = "/".join(path.split("/")[1:3])
+        repo = "/".join(path.split("/")[1:3])
+        log.debug(f"Setting github repo for resource '{self.name}' to '{repo}'")
+        self._github_repo = repo
 
     def set_patched(self):
         self._status = ResourceStatus.PATCHED
