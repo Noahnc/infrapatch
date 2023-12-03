@@ -113,15 +113,13 @@ def get_pr_body(provider_handler: ProviderHandler) -> str:
             body += markdown_tables[provider_name].dumps()
             body += "\n"
         if provider_name in release_notes:
-            body += "### Changelog\n"
+            log.debug(f"Adding release notes for provider '{provider_name}' to pull request body.")
+            body += "## Changelog\n"
             for release_note in release_notes[provider_name]:
-                body += f"""
-                <details>
-                <summary>{release_note.name} - {release_note.version}</summary>
-                {release_note.body}
-                </details>
-                """
-                body += "\n"
+                body += "<details>\n"
+                body += f"<summary>{release_note.name} - {release_note.version}</summary>\n"
+                body += f"{release_note.body}\n"
+                body += "</details>\n"
 
     body += provider_handler._get_statistics().get_markdown_table().dumps()
     body += "\n"
