@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Union
 import json
 import logging as log
@@ -6,7 +7,6 @@ from typing import Protocol
 from urllib import request
 from urllib.parse import urlparse
 
-from attr import dataclass
 
 from infrapatch.core.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider
 
