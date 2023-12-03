@@ -161,10 +161,10 @@ class ProviderHandler:
     def get_release_notes(self, disable_cache: bool = False) -> dict[str, Sequence[VersionedResourceReleaseNotes]]:
         release_notes: dict[str, Sequence[VersionedResourceReleaseNotes]] = {}
         resources = self.get_upgradable_resources(disable_cache)
-        for provider_name, resource in resources.items():
+        for provider_name, provider in self.providers.items():
             provider_release_notes: list[VersionedResourceReleaseNotes] = []
-            provider = self.providers[provider_name]
-            grouped_resources = provider.get_grouped_by_identifier(resource)
+            patched_resources = [resource for resource in resources[provider_name] if resource.status == ResourceStatus.PATCHED]
+            grouped_resources = provider.get_grouped_by_identifier(patched_resources)
             for identifier in progress.track(grouped_resources, description=f"Getting release notes for resources of Provider {provider.get_provider_display_name()}..."):
                 resource_release_note = provider.get_resource_release_notes(grouped_resources[identifier][0])
                 if resource_release_note is not None:
