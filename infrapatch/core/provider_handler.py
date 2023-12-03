@@ -140,7 +140,7 @@ class ProviderHandler:
             if len(changed_resources) == 0:
                 log.debug(f"No changed resources found for provider {provider_name}. Skipping.")
                 continue
-            markdown_tables[provider_name](provider.get_markdown_table(changed_resources))
+            markdown_tables[provider_name] = provider.get_markdown_table(changed_resources)
         return markdown_tables
 
     def set_resources_patched_based_on_existing_resources(self, original_resources: dict[str, Sequence[VersionedResource]]) -> None:
