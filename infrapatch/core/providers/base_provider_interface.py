@@ -31,5 +31,5 @@ class BaseProviderInterface(Protocol):
     def get_resource_release_notes(self, resource: VersionedResource) -> Union[VersionedResourceReleaseNotes, None]:
         ...
 
-    def get_unique_new_versions(self, resources: Sequence[VersionedResource]) -> Sequence[VersionedResource]:
+    def get_grouped_by_identifier(self, resources: Sequence[VersionedResource]) -> dict[str, Sequence[VersionedResource]]:
         ...
