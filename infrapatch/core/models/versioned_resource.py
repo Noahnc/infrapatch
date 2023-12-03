@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Optional, Union
 from urllib.parse import urlparse
 import logging as log
+from git import Sequence
 
 import semantic_version
 
@@ -128,5 +129,7 @@ class VersionedResource:
 
 @dataclass
 class VersionedResourceReleaseNotes:
-    resource: VersionedResource
+    resources: Sequence[VersionedResource]
+    name: str
     body: str
+    version: str
