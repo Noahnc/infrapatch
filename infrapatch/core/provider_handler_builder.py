@@ -1,6 +1,8 @@
 import logging as log
 from pathlib import Path
 from typing import Self
+
+from github import Github
 from infrapatch.core.providers.terraform.terraform_provider_provider import TerraformProviderProvider
 
 from infrapatch.core.providers.terraform.terraform_module_provider import TerraformModuleProvider
@@ -21,6 +23,7 @@ class ProviderHandlerBuilder:
         self.working_directory = working_directory
         self.registry_handler = None
         self.git_repo = None
+        self.github = None
         pass
 
     def add_terraform_registry_configuration(self, default_registry_domain: str, credentials: dict[str, str]) -> Self:
@@ -33,7 +36,7 @@ class ProviderHandlerBuilder:
         if self.registry_handler is None:
             raise Exception("No registry configuration added to ProviderHandlerBuilder.")
         log.debug("Adding TerraformModuleProvider to ProviderHandlerBuilder.")
-        tf_module_provider = TerraformModuleProvider(HclEditCli(), self.registry_handler, HclHandler(HclEditCli()), self.working_directory)
+        tf_module_provider = TerraformModuleProvider(HclEditCli(), self.registry_handler, HclHandler(HclEditCli()), self.working_directory, self.github)
         self.providers.append(tf_module_provider)
         return self
 
@@ -41,14 +44,15 @@ class ProviderHandlerBuilder:
         if self.registry_handler is None:
             raise Exception("No registry configuration added to ProviderHandlerBuilder.")
         log.debug("Adding TerraformModuleProvider to ProviderHandlerBuilder.")
-        tf_module_provider = TerraformProviderProvider(HclEditCli(), self.registry_handler, HclHandler(HclEditCli()), self.working_directory)
+        tf_module_provider = TerraformProviderProvider(HclEditCli(), self.registry_handler, HclHandler(HclEditCli()), self.working_directory, self.github)
         self.providers.append(tf_module_provider)
         return self
 
-    def with_git_integration(self, git_working_directory: Path) -> Self:
+    def with_git_integration(self, git_working_directory: Path, github: Github) -> Self:
         log.debug("Enabling Git integration.")
         self.git_integration = True
         self.git_repo = Repo(git_working_directory)
+        self.github = github
         return self
 
     def build(self) -> ProviderHandler:
