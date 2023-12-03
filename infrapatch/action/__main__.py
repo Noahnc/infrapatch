@@ -34,9 +34,9 @@ def main(debug: bool):
     if "terraform_modules" in config.enabled_providers or "terraform_providers" in config.enabled_providers:
         builder.add_terraform_registry_configuration(config.default_registry_domain, config.terraform_registry_secrets)
     if "terraform_modules" in config.enabled_providers:
-        builder.with_terraform_module_provider()
+        builder.with_terraform_module_provider(github)
     if "terraform_providers" in config.enabled_providers:
-        builder.with_terraform_provider_provider()
+        builder.with_terraform_provider_provider(github)
 
     provider_handler = builder.build()
 
@@ -107,9 +107,21 @@ def update_pr_body(pr, provider_handler):
 def get_pr_body(provider_handler: ProviderHandler) -> str:
     body = ""
     markdown_tables = provider_handler.get_markdown_table_for_changed_resources()
-    for table in markdown_tables:
-        body += table.dumps()
-        body += "\n"
+    release_notes = provider_handler.get_release_notes()
+    for provider_name in provider_handler.providers:
+        if provider_name in markdown_tables:
+            body += markdown_tables[provider_name].dumps()
+            body += "\n"
+        if provider_name in release_notes:
+            body += "### Changelog\n"
+            for release_note in release_notes[provider_name]:
+                body += f"""
+                <details>
+                <summary>{release_note.name} - {release_note.version}</summary>
+                {release_note.body}
+                </details>
+                """
+                body += "\n"
 
     body += provider_handler._get_statistics().get_markdown_table().dumps()
     body += "\n"
