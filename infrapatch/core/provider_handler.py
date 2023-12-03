@@ -9,7 +9,7 @@ from rich import progress
 from rich.console import Console
 
 from infrapatch.core.models.statistics import ProviderStatistics, Statistics
-from infrapatch.core.models.versioned_resource import ResourceStatus, VersionedResource
+from infrapatch.core.models.versioned_resource import ResourceStatus, VersionedResource, VersionedResourceReleaseNotes
 from infrapatch.core.providers.base_provider_interface import BaseProviderInterface
 
 
@@ -128,11 +128,11 @@ class ProviderHandler:
         table = self._get_statistics(disable_cache).get_rich_table()
         self.console.print(table)
 
-    def get_markdown_table_for_changed_resources(self) -> list[MarkdownTableWriter]:
+    def get_markdown_table_for_changed_resources(self) -> dict[str, MarkdownTableWriter]:
         if self._resource_cache is None:
             raise Exception("No resources found. Run get_resources() first.")
 
-        markdown_tables = []
+        markdown_tables = {}
         for provider_name, provider in self.providers.items():
             changed_resources = [
                 resource for resource in self._resource_cache[provider_name] if resource.status == ResourceStatus.PATCHED or resource.status == ResourceStatus.PATCH_ERROR
@@ -140,7 +140,7 @@ class ProviderHandler:
             if len(changed_resources) == 0:
                 log.debug(f"No changed resources found for provider {provider_name}. Skipping.")
                 continue
-            markdown_tables.append(provider.get_markdown_table(changed_resources))
+            markdown_tables[provider_name](provider.get_markdown_table(changed_resources))
         return markdown_tables
 
     def set_resources_patched_based_on_existing_resources(self, original_resources: dict[str, Sequence[VersionedResource]]) -> None:
@@ -157,3 +157,18 @@ class ProviderHandler:
                 found_resource = found_resources[0]
                 found_resource.set_patched()
                 self._resource_cache[provider_name][i] = found_resource  # type: ignore
+
+    def get_release_notes(self, disable_cache: bool = False) -> dict[str, Sequence[VersionedResourceReleaseNotes]]:
+        release_notes: dict[str, Sequence[VersionedResourceReleaseNotes]] = {}
+        resources = self.get_upgradable_resources(disable_cache)
+        for provider_name, resource in resources.items():
+            provider_release_notes: list[VersionedResourceReleaseNotes] = []
+            provider = self.providers[provider_name]
+            grouped_resources = provider.get_grouped_by_identifier(resource)
+            for identifier in progress.track(grouped_resources, description=f"Getting release notes for resources of Provider {provider.get_provider_display_name()}..."):
+                resource_release_note = provider.get_resource_release_notes(grouped_resources[identifier][0])
+                if resource_release_note is not None:
+                    resource_release_note.resources = grouped_resources[identifier]
+                    provider_release_notes.append(resource_release_note)
+            release_notes[provider_name] = provider_release_notes
+        return release_notes
