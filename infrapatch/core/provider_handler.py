@@ -38,6 +38,13 @@ class ProviderHandler:
                 log.debug(f"Using cached resources for provider {provider.get_provider_name()}.")
         return self._resource_cache
 
+    def get_patched_resources(self) -> dict[str, Sequence[VersionedResource]]:
+        resources = self.get_resources()
+        patched_resources: dict[str, Sequence[VersionedResource]] = {}
+        for provider_name, provider in self.providers.items():
+            patched_resources[provider.get_provider_name()] = [resource for resource in resources[provider_name] if resource.status == ResourceStatus.PATCHED]
+        return patched_resources
+
     def get_upgradable_resources(self, disable_cache: bool = False) -> dict[str, Sequence[VersionedResource]]:
         upgradable_resources: dict[str, Sequence[VersionedResource]] = {}
         resources = self.get_resources(disable_cache)
@@ -158,9 +165,8 @@ class ProviderHandler:
                 found_resource.set_patched()
                 self._resource_cache[provider_name][i] = found_resource  # type: ignore
 
-    def get_release_notes(self, disable_cache: bool = False) -> dict[str, Sequence[VersionedResourceReleaseNotes]]:
+    def get_release_notes(self, resources: dict[str, Sequence[VersionedResource]]) -> dict[str, Sequence[VersionedResourceReleaseNotes]]:
         release_notes: dict[str, Sequence[VersionedResourceReleaseNotes]] = {}
-        resources = self.get_upgradable_resources(disable_cache)
         for provider_name, provider in self.providers.items():
             provider_release_notes: list[VersionedResourceReleaseNotes] = []
             patched_resources = [resource for resource in resources[provider_name] if resource.status == ResourceStatus.PATCHED]

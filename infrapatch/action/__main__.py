@@ -107,7 +107,8 @@ def update_pr_body(pr, provider_handler):
 def get_pr_body(provider_handler: ProviderHandler) -> str:
     body = ""
     markdown_tables = provider_handler.get_markdown_table_for_changed_resources()
-    release_notes = provider_handler.get_release_notes()
+    patched_resources = provider_handler.get_patched_resources()
+    release_notes = provider_handler.get_release_notes(patched_resources)
     for provider_name in provider_handler.providers:
         if provider_name in markdown_tables:
             body += markdown_tables[provider_name].dumps()
