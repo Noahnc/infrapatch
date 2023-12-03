@@ -120,7 +120,7 @@ def get_pr_body(provider_handler: ProviderHandler) -> str:
                 body += "<details>\n"
                 body += f"<summary>{release_note.name} - {release_note.version}</summary>\n"
                 body += f"{release_note.body}\n"
-                body += "</details>\n"
+                body += "</details>\n\n"
 
     body += provider_handler._get_statistics().get_markdown_table().dumps()
     body += "\n"
