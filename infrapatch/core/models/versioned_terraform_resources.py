@@ -6,14 +6,16 @@ from typing import Optional, Union
 from infrapatch.core.models.versioned_resource import VersionedResource
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VersionedTerraformResource(VersionedResource):
-    _base_domain: Union[str, None] = None
-    _identifier: Union[str, None] = None
-    _source: Union[str, None] = None
+    _source: str
+    _base_domain: Optional[str] = None
+    _identifier: Optional[str] = None
 
     @property
-    def source(self) -> Union[str, None]:
+    def source(self) -> str:
+        if self._source is None:
+            raise Exception("Source is None.")
         return self._source
 
     @property
@@ -36,12 +38,10 @@ class VersionedTerraformResource(VersionedResource):
 @dataclass
 class TerraformModule(VersionedTerraformResource):
     def __post_init__(self):
-        if self._source is None:
-            raise Exception("Source is None.")
         self.source = self._source
 
     @property
-    def source(self) -> Union[str, None]:
+    def source(self) -> str:
         return self._source
 
     @property
@@ -67,12 +67,10 @@ class TerraformModule(VersionedTerraformResource):
 @dataclass
 class TerraformProvider(VersionedTerraformResource):
     def __post_init__(self):
-        if self._source is None:
-            raise Exception("Source is None.")
         self.source = self._source
 
     @property
-    def source(self) -> Union[str, None]:
+    def source(self) -> str:
         return self._source
 
     @property

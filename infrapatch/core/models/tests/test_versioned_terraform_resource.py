@@ -69,6 +69,7 @@ def test_to_dict():
         "_source": "test/test_module/test_provider",
         "_base_domain": None,
         "_identifier": "test/test_module/test_provider",
+        "_github_repo": None,
     }
     assert provider_dict == {
         "name": "test_resource",
@@ -79,4 +80,5 @@ def test_to_dict():
         "_source": "test_provider/test_provider",
         "_base_domain": None,
         "_identifier": "test_provider/test_provider",
+        "_github_repo": None,
     }
