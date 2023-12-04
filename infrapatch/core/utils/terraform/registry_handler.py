@@ -57,6 +57,9 @@ class RegistryHandler(RegistryHandlerInterface):
             versions = response_data["versions"]
         else:
             raise Exception(f"Resource type '{type(resource)}' is not supported.")
+        if len(versions) == 0:
+            log.warning(f"No versions found for resource '{resource.source}'.")
+            return None
         sorted_versions = sorted(versions, key=lambda k: StrictVersion(k["version"]), reverse=True)
         newest_version = sorted_versions[0]["version"]
 
@@ -114,7 +117,11 @@ class RegistryHandler(RegistryHandlerInterface):
 
         base_endpoint, registry_base_domain = self._compose_base_url(resource)
         version_info_endpoint = f"{base_endpoint}/{resource.newest_version}"
-        response = self._send_request(version_info_endpoint, registry_base_domain)
+        try:
+            response = self._send_request(version_info_endpoint, registry_base_domain)
+        except TerraformRegistryException as e:
+            log.debug(f"Could not get source for resource '{resource.source}': {e}")
+            return None
         response_data = json.loads(response.read())
         if "source" not in response_data:
             log.debug(f"Source not found in response data: {response_data}")
