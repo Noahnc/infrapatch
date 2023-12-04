@@ -140,8 +140,10 @@ class RegistryHandler(RegistryHandlerInterface):
             request_object.add_header("Authorization", f"Bearer {token}")
         else:
             log.debug(f"No credentials found for registry '{registry_base_domain}', using unauthenticated request.")
-
-        response = request.urlopen(request_object)
+        try:
+            response = request.urlopen(request_object)
+        except Exception as e:
+            raise TerraformRegistryException(f"Registry request returned an error '{url}': {e}")
         if response.status == 404:
             raise TerraformRegistryException(f"Registry resource '{url}' not found.")
         elif response.status >= 400:
