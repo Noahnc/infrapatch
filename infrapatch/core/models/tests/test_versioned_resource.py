@@ -16,10 +16,18 @@ def test_version_management():
     resource.set_patched()
     assert resource.status == ResourceStatus.PATCHED
 
+    # Check new_version the same as current_version
     resource = VersionedResource(name="test_resource", current_version="1.0.0", _source_file="test_file.py")
     resource.newest_version = "1.0.0"
 
-    assert resource.status == ResourceStatus.UNPATCHED
+    assert resource.status == ResourceStatus.UP_TO_DATE
+    assert resource.installed_version_equal_or_newer_than_new_version() is True
+
+    # Check new_version older than current_version
+    resource = VersionedResource(name="test_resource", current_version="1.0.0", _source_file="test_file.py")
+    resource.newest_version = "0.1.0"
+
+    assert resource.status == ResourceStatus.UP_TO_DATE
     assert resource.installed_version_equal_or_newer_than_new_version() is True
 
 
@@ -62,6 +70,20 @@ def test_patch_error():
     resource = VersionedResource(name="test_resource", current_version="1.0.0", _source_file="test_file.py")
     resource.set_patch_error()
     assert resource.status == ResourceStatus.PATCH_ERROR
+
+
+def test_version_not_found():
+    # Test manual setting
+    resource = VersionedResource(name="test_resource", current_version="1.0.0", _source_file="test_file.py")
+    resource.set_no_version_found()
+    assert resource.status == ResourceStatus.NO_VERSION_FOUND
+    assert resource.installed_version_equal_or_newer_than_new_version() is True
+
+    # Test by setting None as new version
+    resource = VersionedResource(name="test_resource", current_version="1.0.0", _source_file="test_file.py")
+    resource.newest_version = None
+    assert resource.status == ResourceStatus.NO_VERSION_FOUND
+    assert resource.installed_version_equal_or_newer_than_new_version() is True
 
 
 def test_path():

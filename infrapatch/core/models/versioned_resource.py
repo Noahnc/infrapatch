@@ -12,8 +12,10 @@ import semantic_version
 
 class ResourceStatus:
     UNPATCHED = "unpatched"
+    UP_TO_DATE = "up_to_date"
     PATCHED = "patched"
     PATCH_ERROR = "patch_error"
+    NO_VERSION_FOUND = "no_version_found"
 
 
 @dataclass
@@ -54,11 +56,17 @@ class VersionedResource:
         return self.newest_version
 
     @newest_version.setter
-    def newest_version(self, version: str):
+    def newest_version(self, version: Optional[str]):
         if self.has_tile_constraint():
             self._newest_version = f"~>{version}"
+        else:
+            self._newest_version = version
+
+        if version is None:
+            self.set_no_version_found()
             return
-        self._newest_version = version
+        if self.installed_version_equal_or_newer_than_new_version():
+            self.set_up_to_date()
 
     def set_github_repo(self, github_repo_url: str):
         url = urlparse(github_repo_url)
@@ -74,6 +82,12 @@ class VersionedResource:
     def set_patched(self):
         self._status = ResourceStatus.PATCHED
 
+    def set_no_version_found(self):
+        self._status = ResourceStatus.NO_VERSION_FOUND
+
+    def set_up_to_date(self):
+        self._status = ResourceStatus.UP_TO_DATE
+
     def has_tile_constraint(self) -> bool:
         result = re.match(r"^~>[0-9]+\.[0-9]+\.[0-9]+$", self.current_version)
         if result is None:
@@ -88,6 +102,8 @@ class VersionedResource:
         return result
 
     def installed_version_equal_or_newer_than_new_version(self):
+        if self._status == ResourceStatus.NO_VERSION_FOUND:
+            return True
         if self.newest_version is None:
             raise Exception(f"Newest version of resource '{self.name}' is not set.")
 
