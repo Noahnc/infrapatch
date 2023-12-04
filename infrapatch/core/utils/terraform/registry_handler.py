@@ -37,7 +37,7 @@ class RegistryHandler(RegistryHandlerInterface):
         self.provider_cache: dict[str, TerraformRegistryResourceCache] = {}
         self.credentials = credentials
 
-    def get_newest_version(self, resource: VersionedTerraformResource):
+    def get_newest_version(self, resource: VersionedTerraformResource) -> Union[str, None]:
         if not isinstance(resource, TerraformModule) and not isinstance(resource, TerraformProvider):
             raise Exception(f"Resource type '{type(resource)}' is not supported.")
 
@@ -58,7 +58,7 @@ class RegistryHandler(RegistryHandlerInterface):
         else:
             raise Exception(f"Resource type '{type(resource)}' is not supported.")
         if len(versions) == 0:
-            log.warning(f"No versions found for resource '{resource.source}'.")
+            log.debug(f"No versions found for resource '{resource.source}'.")
             return None
         sorted_versions = sorted(versions, key=lambda k: StrictVersion(k["version"]), reverse=True)
         newest_version = sorted_versions[0]["version"]
@@ -84,7 +84,7 @@ class RegistryHandler(RegistryHandlerInterface):
         cache[resource.source] = new_cache
         return new_cache
 
-    def _compose_base_url(self, resource):
+    def _compose_base_url(self, resource) -> tuple[str, str]:
         registry_base_domain = self.default_registry_domain
         if resource.base_domain is not None:
             registry_base_domain = resource.base_domain
@@ -107,7 +107,7 @@ class RegistryHandler(RegistryHandlerInterface):
         endpoint = f"{endpoint}{url_from_meta.path}{resource.identifier}"
         return endpoint, registry_base_domain
 
-    def get_source(self, resource: VersionedTerraformResource):
+    def get_source(self, resource: VersionedTerraformResource) -> Union[str, None]:
         if not isinstance(resource, TerraformModule) and not isinstance(resource, TerraformProvider):
             raise Exception(f"Resource type '{type(resource)}' is not supported.")
 
@@ -150,7 +150,7 @@ class RegistryHandler(RegistryHandlerInterface):
             raise TerraformRegistryException(f"Registry request '{url}' returned error code '{response.status}'.")
         return response
 
-    def get_registry_metadata(self, registry_base_domain: str):
+    def get_registry_metadata(self, registry_base_domain: str) -> dict:
         if registry_base_domain in self.cached_registry_metadata:
             log.debug(f"Registry metadata for '{registry_base_domain}' already cached.")
             return self.cached_registry_metadata[registry_base_domain]
