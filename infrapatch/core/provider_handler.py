@@ -172,6 +172,10 @@ class ProviderHandler:
             patched_resources = [resource for resource in resources[provider_name] if resource.status == ResourceStatus.PATCHED]
             grouped_resources = provider.get_grouped_by_identifier(patched_resources)
             for identifier in progress.track(grouped_resources, description=f"Getting release notes for resources of Provider {provider.get_provider_display_name()}..."):
+                identifier_resources = grouped_resources[identifier]
+                if identifier_resources[0].status == ResourceStatus.NO_VERSION_FOUND:
+                    log.debug(f"Skipping resource '{identifier_resources[0].name}' since no version was found.")
+                    continue
                 resource_release_note = provider.get_resource_release_notes(grouped_resources[identifier][0])
                 if resource_release_note is not None:
                     resource_release_note.resources = grouped_resources[identifier]
