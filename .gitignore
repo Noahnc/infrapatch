@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+Pipfile
+
 **/.terraform/*
 
 # Distribution / packaging
