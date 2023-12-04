@@ -71,9 +71,9 @@ class TerraformProvider(BaseProviderInterface):
         table.add_column("Source", overflow="fold")
         table.add_column("Current")
         table.add_column("Newest")
-        table.add_column("Upgradeable")
+        table.add_column("Status")
         for resource in resources:
-            table.add_row(resource.name, resource.source, resource.current_version, resource.newest_version, str(not resource.installed_version_equal_or_newer_than_new_version()))
+            table.add_row(resource.name, resource.source, resource.current_version, resource.newest_version, resource.status)
         return table
 
     def get_markdown_table(self, resources: Sequence[VersionedTerraformResource]) -> MarkdownTableWriter:
@@ -84,7 +84,7 @@ class TerraformProvider(BaseProviderInterface):
                 "Source": resource.source,
                 "Current": resource.current_version,
                 "Newest": resource.newest_version,
-                "Upgradeable": str(not resource.installed_version_equal_or_newer_than_new_version()),
+                "Status": resource.status,
             }
             dict_list.append(dict_element)
         return MarkdownTableWriter(
