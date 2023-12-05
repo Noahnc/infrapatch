@@ -39,10 +39,13 @@ class HclEditCli(HclEditCliInterface):
         self._run_hcl_edit_command("update", resource, file, value)
 
     def get_hcl_value(self, resource: str, file: Path) -> str:
-        result = self._run_hcl_edit_command("get", resource, file)
-        if result is None:
+        result = self._run_hcl_edit_command("read", resource, file)
+        if result is None or result == "":
             raise HclEditCliException(f"Could not get value for resource '{resource}' from file '{file}'.")
-        return result
+        resource_id, value = result.split(" ")
+        if resource_id != resource:
+            raise HclEditCliException(f"Could not get value for resource '{resource}' from file '{file}'.")
+        return value
 
     def _run_hcl_edit_command(self, action: str, resource: str, file: Path, value: Union[str, None] = None) -> Optional[str]:
         command = [self._binary_path.absolute().as_posix(), action, resource]
