@@ -7,7 +7,7 @@ from typing import Protocol, Sequence
 import pygohcl
 
 from infrapatch.core.models.versioned_terraform_resources import TerraformModule, TerraformProvider, VersionedTerraformResource
-from infrapatch.core.utils.terraform.hcl_edit_cli import HclEditCli
+from infrapatch.core.utils.terraform.hcl_edit_cli import HclEditCliInterface
 
 
 class HclParserException(Exception):
@@ -29,7 +29,7 @@ class HclHandlerInterface(Protocol):
 
 
 class HclHandler(HclHandlerInterface):
-    def __init__(self, hcl_edit_cli: HclEditCli):
+    def __init__(self, hcl_edit_cli: HclEditCliInterface):
         self.hcl_edit_cli = hcl_edit_cli
         pass
 

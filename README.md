@@ -18,6 +18,8 @@ The CLI works by scanning your .tf files for versioned providers and modules and
     - [Authentication](#authentication-1)
       - [.terraformrc file:](#terraformrc-file)
       - [infrapatch\_credentials.json file:](#infrapatch_credentialsjson-file)
+    - [Setup Development Environment for InfraPatch](#setup-development-environment-for-infrapatch)
+    - [Contributing](#contributing)
 
 
 ## GitHub Action
@@ -181,4 +183,17 @@ You can also specify the path to the credentials file with the `--credentials-fi
 ```bash
 infrapatch --credentials-file-path "path/to/credentials/file" update
 ```
+
+### Setup Development Environment for InfraPatch
+
+This repository contains a devcontainer configuration for VSCode. To use it, you need to install the following tools:
+* ["Dev Containers VSCode Extension"](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) for VSCode.
+* A local Docker installation like [Docker Desktop](https://www.docker.com/products/docker-desktop).
+  
+After installation, you can open the repository in the devcontainer by clicking on the green "Open in Container" button in the bottom left corner of VSCode.
+During the first start, the devcontainer will build the container image and install all dependencies.
+
+### Contributing
+
+If you have any ideas for improvements or find any bugs, feel free to open an issue or create a pull request.
 

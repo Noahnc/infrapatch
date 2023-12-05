@@ -55,7 +55,12 @@ def test_find():
 
 def test_to_dict():
     module = TerraformModule(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="test/test_module/test_provider")
-    provider = TerraformProvider(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="test_provider/test_provider")
+    provider = TerraformProvider(
+        name="test_resource",
+        current_version="1.0.0",
+        _source_file="test_file.py",
+        _source="test_provider/test_provider",
+    )
 
     module_dict = module.to_dict()
     provider_dict = provider.to_dict()
