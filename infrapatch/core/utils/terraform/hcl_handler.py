@@ -7,7 +7,7 @@ from typing import Protocol, Sequence
 import pygohcl
 
 from infrapatch.core.models.versioned_terraform_resources import TerraformModule, TerraformProvider, VersionedTerraformResource
-from infrapatch.core.utils.terraform.hcl_edit_cli import HclEditCli, HclEditCliInterface
+from infrapatch.core.utils.terraform.hcl_edit_cli import HclEditCliInterface
 
 
 class HclParserException(Exception):

@@ -16,13 +16,6 @@ def test_attributes():
     assert provider.base_domain is None
     assert provider.identifier == "test_provider/test_provider"
 
-    # test code source
-    module.code_source = "testing/module/test_module"
-    provider.code_source = "https://github.com/hashicorp/terraform-provider-test"
-
-    assert module.is_github_hosted() is False
-    assert provider.is_github_hosted() is True
-
     # test with custom registry
     module = TerraformModule(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="testregistry.ch/test/test_module/test_provider")
     provider = TerraformProvider(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="testregistry.ch/test_provider/test_provider")
@@ -67,7 +60,6 @@ def test_to_dict():
         current_version="1.0.0",
         _source_file="test_file.py",
         _source="test_provider/test_provider",
-        code_source="github.com/hashicorp/terraform-provider-test",
     )
 
     module_dict = module.to_dict()

@@ -34,11 +34,6 @@ class VersionedTerraformResource(VersionedResource):
         filtered_resources = super().find(resources)
         return [resource for resource in filtered_resources if resource._source == self._source]
 
-    def is_github_hosted(self) -> bool:
-        if self.code_source is None:
-            return False
-        return self.code_source.lower().startswith("https://github.com")
-
 
 @dataclass
 class TerraformModule(VersionedTerraformResource):
