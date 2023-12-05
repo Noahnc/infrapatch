@@ -3,14 +3,19 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, Union
+from urllib.parse import urlparse
+import logging as log
+from git import Sequence
 
 import semantic_version
 
 
 class ResourceStatus:
     UNPATCHED = "unpatched"
+    UP_TO_DATE = "up_to_date"
     PATCHED = "patched"
     PATCH_ERROR = "patch_error"
+    NO_VERSION_FOUND = "no_version_found"
 
 
 @dataclass
@@ -18,8 +23,9 @@ class VersionedResource:
     name: str
     current_version: str
     _source_file: str
-    _newest_version: Union[str, None] = None
+    _newest_version: Optional[str] = None
     _status: str = ResourceStatus.UNPATCHED
+    _github_repo: Optional[str] = None
 
     @property
     def source_file(self) -> Path:
@@ -28,6 +34,10 @@ class VersionedResource:
     @property
     def status(self) -> str:
         return self._status
+
+    @property
+    def github_repo(self) -> Union[str, None]:
+        return self._github_repo
 
     @property
     def resource_name(self):
@@ -46,14 +56,37 @@ class VersionedResource:
         return self.newest_version
 
     @newest_version.setter
-    def newest_version(self, version: str):
+    def newest_version(self, version: Optional[str]):
         if self.has_tile_constraint():
             self._newest_version = f"~>{version}"
+        else:
+            self._newest_version = version
+
+        if version is None:
+            self.set_no_version_found()
             return
-        self._newest_version = version
+        if self.installed_version_equal_or_newer_than_new_version():
+            self.set_up_to_date()
+
+    def set_github_repo(self, github_repo_url: str):
+        url = urlparse(github_repo_url)
+        if url.path is None or url.path == "" or url.path == "/":
+            raise Exception(f"Invalid github repo url '{github_repo_url}'.")
+        path = url.path
+        if path.endswith(".git"):
+            path = path[:-4]
+        repo = "/".join(path.split("/")[1:3])
+        log.debug(f"Setting github repo for resource '{self.name}' to '{repo}'")
+        self._github_repo = repo
 
     def set_patched(self):
         self._status = ResourceStatus.PATCHED
+
+    def set_no_version_found(self):
+        self._status = ResourceStatus.NO_VERSION_FOUND
+
+    def set_up_to_date(self):
+        self._status = ResourceStatus.UP_TO_DATE
 
     def has_tile_constraint(self) -> bool:
         result = re.match(r"^~>[0-9]+\.[0-9]+\.[0-9]+$", self.current_version)
@@ -69,6 +102,8 @@ class VersionedResource:
         return result
 
     def installed_version_equal_or_newer_than_new_version(self):
+        if self._status == ResourceStatus.NO_VERSION_FOUND:
+            return True
         if self.newest_version is None:
             raise Exception(f"Newest version of resource '{self.name}' is not set.")
 
@@ -106,3 +141,11 @@ class VersionedResource:
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)
+
+
+@dataclass
+class VersionedResourceReleaseNotes:
+    resources: Sequence[VersionedResource]
+    name: str
+    body: str
+    version: str

@@ -1,6 +1,8 @@
 import logging as log
 from pathlib import Path
-from typing import Self
+from typing import Self, Union
+
+from github import Github
 from infrapatch.core.providers.terraform.terraform_provider_provider import TerraformProviderProvider
 
 from infrapatch.core.providers.terraform.terraform_module_provider import TerraformModuleProvider
@@ -29,19 +31,23 @@ class ProviderHandlerBuilder:
         self.registry_handler = RegistryHandler(default_registry_domain, credentials)
         return self
 
-    def with_terraform_module_provider(self) -> Self:
+    def with_terraform_module_provider(self, github: Union[Github, None] = None) -> Self:
         if self.registry_handler is None:
             raise Exception("No registry configuration added to ProviderHandlerBuilder.")
         log.debug("Adding TerraformModuleProvider to ProviderHandlerBuilder.")
-        tf_module_provider = TerraformModuleProvider(HclEditCli(), self.registry_handler, HclHandler(HclEditCli()), self.working_directory)
+        if github is None:
+            github = Github()
+        tf_module_provider = TerraformModuleProvider(HclEditCli(), self.registry_handler, HclHandler(HclEditCli()), self.working_directory, github)
         self.providers.append(tf_module_provider)
         return self
 
-    def with_terraform_provider_provider(self) -> Self:
+    def with_terraform_provider_provider(self, github: Union[Github, None] = None) -> Self:
         if self.registry_handler is None:
             raise Exception("No registry configuration added to ProviderHandlerBuilder.")
         log.debug("Adding TerraformModuleProvider to ProviderHandlerBuilder.")
-        tf_module_provider = TerraformProviderProvider(HclEditCli(), self.registry_handler, HclHandler(HclEditCli()), self.working_directory)
+        if github is None:
+            github = Github()
+        tf_module_provider = TerraformProviderProvider(HclEditCli(), self.registry_handler, HclHandler(HclEditCli()), self.working_directory, github)
         self.providers.append(tf_module_provider)
         return self
 
