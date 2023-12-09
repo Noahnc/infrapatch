@@ -114,6 +114,9 @@ def get_pr_body(provider_handler: ProviderHandler) -> str:
             body += markdown_tables[provider_name].dumps()
             body += "\n"
         if provider_name in release_notes:
+            if len(release_notes[provider_name]) == 0:
+                log.debug(f"No release notes found for provider '{provider_name}'.")
+                continue
             log.debug(f"Adding release notes for provider '{provider_name}' to pull request body.")
             body += "## Changelog\n"
             for release_note in release_notes[provider_name]:
