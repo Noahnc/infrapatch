@@ -106,7 +106,7 @@ class TerraformProvider(BaseProviderInterface):
             return None
         try:
             repo = self._github.get_repo(resource.github_repo)
-            release_notes = repo.get_release(f"v{resource.newest_version}").body
+            release_notes = repo.get_release(f"v{resource.newest_version_base}").body
         except Exception as e:
             log.warning(f"Could not get release notes from repo '{resource.github_repo}' for version '{resource.newest_version}': {e}")
             return None

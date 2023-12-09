@@ -116,7 +116,7 @@ class RegistryHandler(RegistryHandlerInterface):
             return cache.source
 
         base_endpoint, registry_base_domain = self._compose_base_url(resource)
-        version_info_endpoint = f"{base_endpoint}/{resource.newest_version}"
+        version_info_endpoint = f"{base_endpoint}/{resource.newest_version_base}"
         try:
             response = self._send_request(version_info_endpoint, registry_base_domain)
         except TerraformRegistryException as e:
