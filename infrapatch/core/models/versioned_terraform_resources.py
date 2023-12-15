@@ -46,7 +46,7 @@ class TerraformModule(VersionedTerraformResource):
 
     @property
     def resource_name(self):
-        return "Module"
+        return "Terraform Module"
 
     @source.setter
     def source(self, source: str):
@@ -75,7 +75,7 @@ class TerraformProvider(VersionedTerraformResource):
 
     @property
     def resource_name(self):
-        return "Module"
+        return "Terraform Provider"
 
     @source.setter
     def source(self, source: str) -> None:
