@@ -16,8 +16,8 @@ class ResourceStatus:
     PATCHED = "patched"
     PATCH_ERROR = "patch_error"
     NO_VERSION_FOUND = "no_version_found"
-    
-    
+
+
 @dataclass
 class VersionedResourceOptions:
     ignore_resource: bool

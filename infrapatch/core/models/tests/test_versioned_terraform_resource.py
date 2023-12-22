@@ -17,8 +17,12 @@ def test_attributes():
     assert provider.identifier == "test_provider/test_provider"
 
     # test with custom registry
-    module = TerraformModule(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="testregistry.ch/test/test_module/test_provider", start_line_number=1)
-    provider = TerraformProvider(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="testregistry.ch/test_provider/test_provider", start_line_number=1)
+    module = TerraformModule(
+        name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="testregistry.ch/test/test_module/test_provider", start_line_number=1
+    )
+    provider = TerraformProvider(
+        name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="testregistry.ch/test_provider/test_provider", start_line_number=1
+    )
 
     assert module.source == "testregistry.ch/test/test_module/test_provider"
     assert module.base_domain == "testregistry.ch"
@@ -39,8 +43,12 @@ def test_attributes():
 
 
 def test_find():
-    findably_resource = TerraformModule(name="test_resource3", current_version="1.0.0", _source_file="test_file3.py", _source="test/test_module3/test_provider", start_line_number=1)
-    unfindably_resource = TerraformModule(name="test_resource6", current_version="1.0.0", _source_file="test_file8.py", _source="test/test_module3/test_provider", start_line_number=1)
+    findably_resource = TerraformModule(
+        name="test_resource3", current_version="1.0.0", _source_file="test_file3.py", _source="test/test_module3/test_provider", start_line_number=1
+    )
+    unfindably_resource = TerraformModule(
+        name="test_resource6", current_version="1.0.0", _source_file="test_file8.py", _source="test/test_module3/test_provider", start_line_number=1
+    )
     resources = [
         TerraformModule(name="test_resource1", current_version="1.0.0", _source_file="test_file1.py", _source="test/test_module1/test_provider", start_line_number=1),
         TerraformModule(name="test_resource2", current_version="1.0.0", _source_file="test_file2.py", _source="test/test_module2/test_provider", start_line_number=1),
@@ -55,13 +63,7 @@ def test_find():
 
 def test_to_dict():
     module = TerraformModule(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="test/test_module/test_provider", start_line_number=1)
-    provider = TerraformProvider(
-        name="test_resource",
-        current_version="1.0.0",
-        _source_file="test_file.py",
-        _source="test_provider/test_provider",
-        start_line_number=1
-    )
+    provider = TerraformProvider(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="test_provider/test_provider", start_line_number=1)
 
     module_dict = module.to_dict()
     provider_dict = provider.to_dict()
