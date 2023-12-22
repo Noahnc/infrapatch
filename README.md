@@ -20,6 +20,10 @@ The CLI works by scanning your .tf files for versioned providers and modules and
       - [infrapatch\_credentials.json file:](#infrapatch_credentialsjson-file)
     - [Setup Development Environment for InfraPatch](#setup-development-environment-for-infrapatch)
     - [Contributing](#contributing)
+  - [Global](#global)
+    - [Resource Options](#resource-options)
+      - [Available Options](#available-options)
+      - [Example](#example)
 
 
 ## GitHub Action
@@ -196,4 +200,59 @@ During the first start, the devcontainer will build the container image and inst
 ### Contributing
 
 If you have any ideas for improvements or find any bugs, feel free to open an issue or create a pull request.
+
+## Global 
+
+The following section describes configurations and behaviors that are applicable to the Github Action and the CLI.
+
+### Resource Options
+
+InfraPatch supports individual resource options to change the behavior for a specific resource.
+Resource options can be specified one line obove your resource definition with the following syntax:
+
+```hcl
+# infrapatch_options: <option_name>=<option_value>
+module "example" {
+  source = "terraform-aws-modules/example"
+  name: "demo"
+}
+
+terraform {
+  required_providers {
+    # infrapatch_options: <option_name>=<option_value>
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+}
+```
+
+#### Available Options
+
+Currently, the following options are available:
+
+| Option Name | Description | Default Value |
+| ----------- | ----------- | ------------- |
+| `ignore_resource` | If set to `true`, the resource will be ignored by InfraPatch. | `false` |
+
+#### Example 
+
+The following example shows how to ignore a terraform module and a terraform provider:
+  
+  ```hcl
+  # infrapatch_options: ignore_resource=true
+  module "example" {
+    source = "terraform-aws-modules/example"
+    name: "demo"
+  }
+
+  terraform {
+    required_providers {
+      # infrapatch_options: ignore_resource=true
+      aws = {
+        source = "hashicorp/aws"
+      }
+    }
+  }
+  ```
 
