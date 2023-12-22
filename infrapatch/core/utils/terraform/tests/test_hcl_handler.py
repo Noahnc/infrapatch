@@ -23,11 +23,12 @@ def valid_terraform_code():
     return """
         terraform {
             required_providers {
-                test_provider = {
+                test_provider   = {
+                    test = "test"
                     source = "test_provider/test_provider"
                     version = ">1.0.0"
                 }
-                test_provider2 = {
+                test_provider2 =   {
                     source = "spacelift.io/test_provider/test_provider2"
                     version = "1.0.5"
                 }
@@ -38,7 +39,7 @@ def valid_terraform_code():
             version = "2.0.0"
             name = "Test_module"
         }
-        module "test_module2" {
+        module "test_module2"   {
             source = "spacelift.io/test/test_module/test_provider"
             version = "1.0.2"
             name = "Test_module2"
@@ -56,7 +57,7 @@ def invalid_terraform_code():
     return """
         terraform {
             required_providers {
-                test_provider = {
+                test_provider =    {
                     source = "test_provider/test_provider"
                     version = ">1.0.0"
                 }
@@ -66,7 +67,7 @@ def invalid_terraform_code():
                 }
             }
         }
-        module "test_module" {
+        module "test_module"   {
             source = "test/test_module/test_provider"
             version = "2.0.0"
             name = Test_module"
@@ -99,7 +100,7 @@ def test_get_terraform_resources_from_file(hcl_handler: HclHandler, valid_terraf
             assert resource.current_version == "2.0.0"
             assert resource.source == "test/test_module/test_provider"
             assert resource.identifier == "test/test_module/test_provider"
-            assert resource.start_line_number == 14
+            assert resource.start_line_number == 15
             assert resource.base_domain is None
         elif resource.name == "test_module2":
             assert isinstance(resource, TerraformModule)
@@ -107,7 +108,7 @@ def test_get_terraform_resources_from_file(hcl_handler: HclHandler, valid_terraf
             assert resource.source == "spacelift.io/test/test_module/test_provider"
             assert resource.identifier == "test/test_module/test_provider"
             assert resource.base_domain == "spacelift.io"
-            assert resource.start_line_number == 19
+            assert resource.start_line_number == 20
         elif resource.name == "test_provider":
             assert isinstance(resource, TerraformProvider)
             assert resource.current_version == ">1.0.0"
@@ -120,7 +121,7 @@ def test_get_terraform_resources_from_file(hcl_handler: HclHandler, valid_terraf
             assert resource.current_version == "1.0.5"
             assert resource.source == "spacelift.io/test_provider/test_provider2"
             assert resource.identifier == "test_provider/test_provider2"
-            assert resource.start_line_number == 8
+            assert resource.start_line_number == 9
             assert resource.base_domain == "spacelift.io"
         else:
             raise Exception(f"Unknown resource '{resource.name}'.")
