@@ -12,6 +12,7 @@ from rich.console import Console
 import infrapatch.core.constants as const
 import infrapatch.core.constants as cs
 from infrapatch.core.provider_handler import ProviderHandler
+from infrapatch.core.utils.options_processor import OptionsProcessor
 from infrapatch.core.utils.terraform.hcl_edit_cli import HclEditCli
 from infrapatch.core.utils.terraform.hcl_handler import HclHandler
 from infrapatch.core.utils.terraform.registry_handler import RegistryHandler
@@ -61,4 +62,6 @@ class ProviderHandlerBuilder:
         if len(self.providers) == 0:
             raise Exception("No providers added to ProviderHandlerBuilder.")
         statistics_file = self.working_directory.joinpath(f"{cs.APP_NAME}_Statistics.json")
-        return ProviderHandler(providers=self.providers, console=Console(width=const.CLI_WIDTH), statistics_file=statistics_file, repo=self.git_repo)
+        return ProviderHandler(
+            providers=self.providers, console=Console(width=const.CLI_WIDTH), options_processor=OptionsProcessor(), statistics_file=statistics_file, repo=self.git_repo
+        )
