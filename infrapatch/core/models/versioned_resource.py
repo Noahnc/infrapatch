@@ -6,6 +6,7 @@ from typing import Any, Optional, Union
 from urllib.parse import urlparse
 import logging as log
 from git import Sequence
+from pydantic import BaseModel
 
 import semantic_version
 
@@ -18,9 +19,8 @@ class ResourceStatus:
     NO_VERSION_FOUND = "no_version_found"
 
 
-@dataclass
-class VersionedResourceOptions:
-    ignore_resource: bool
+class VersionedResourceOptions(BaseModel):
+    ignore_resource: bool = False
 
 
 @dataclass
