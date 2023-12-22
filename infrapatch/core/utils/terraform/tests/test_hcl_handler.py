@@ -94,7 +94,7 @@ def test_get_terraform_resources_from_file(hcl_handler: HclHandler, valid_terraf
     assert len(providers_filtered) == len(providers)
 
     for resource in resouces:
-        assert resource._source_file == tf_file.absolute().as_posix()
+        assert resource.source_file == tf_file
         if resource.name == "test_module":
             assert isinstance(resource, TerraformModule)
             assert resource.current_version == "2.0.0"

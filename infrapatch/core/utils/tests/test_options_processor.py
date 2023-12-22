@@ -69,35 +69,40 @@ def test_options_processing_from_file(options_processor: OptionsProcessor, hcl_h
     # Check all resources parsed from the file for correct options
     for resource in resouces:
         resource = options_processor.process_options_for_resource(resource)
+        assert resource.options is not None
         if resource.name == "test_module":
-            assert resource.options is None
+            assert resource.options.ignore_resource is False
         elif resource.name == "test_module2":
-            assert resource.options is not None
             assert resource.options.ignore_resource is True
         elif resource.name == "test_provider":
-            assert resource.options is not None
             assert resource.options.ignore_resource is True
         elif resource.name == "test_provider2":
-            assert resource.options is None
+            assert resource.options.ignore_resource is False
         else:
             raise Exception(f"Unknown resource '{resource.name}'.")
 
 
 def test_get_upper_line_with_non_valid_line_numbers(options_processor: OptionsProcessor):
     # Should return none since start line number is 1
-    resource = TerraformModule(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="test/test_module/test_provider", start_line_number=1)
+    resource = TerraformModule(name="test_resource", current_version="1.0.0", source_file=Path("test_file.py"), source_string="test/test_module/test_provider", start_line_number=1)
     upper_line_content = options_processor._get_upper_line_content(resource)
     assert upper_line_content is None
 
     # Should raise an exception since start line number is 0
     with pytest.raises(Exception):
-        resource = TerraformModule(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="test/test_module/test_provider", start_line_number=0)
+        resource = TerraformModule(
+            name="test_resource", current_version="1.0.0", source_file=Path("test_file.py"), source_string="test/test_module/test_provider", start_line_number=0
+        )
         upper_line_content = options_processor._get_upper_line_content(resource)
 
 
 def test_get_upper_line_with_valid_line_numbers(options_processor: OptionsProcessor):
-    resource1 = TerraformModule(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="test/test_module/test_provider", start_line_number=2)
-    resource2 = TerraformModule(name="test_resource", current_version="1.0.0", _source_file="test_file.py", _source="test/test_module/test_provider", start_line_number=5)
+    resource1 = TerraformModule(
+        name="test_resource", current_version="1.0.0", source_file=Path("test_file.py"), source_string="test/test_module/test_provider", start_line_number=2
+    )
+    resource2 = TerraformModule(
+        name="test_resource", current_version="1.0.0", source_file=Path("test_file.py"), source_string="test/test_module/test_provider", start_line_number=5
+    )
     with mock.patch("builtins.open", mock.mock_open(read_data="line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10\n")):
         resource1_line = options_processor._get_upper_line_content(resource1)
         resource2_line = options_processor._get_upper_line_content(resource2)

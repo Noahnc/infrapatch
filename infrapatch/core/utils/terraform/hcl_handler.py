@@ -87,9 +87,9 @@ class HclHandler(HclHandlerInterface):
                     found_resources.append(
                         TerraformProvider(
                             name=provider_name,
-                            _source=source,
+                            source_string=source,
                             current_version=provider_config["version"],
-                            _source_file=tf_file.absolute().as_posix(),
+                            source_file=tf_file,
                             start_line_number=start_line_number,
                         )
                     )
@@ -108,9 +108,7 @@ class HclHandler(HclHandlerInterface):
                     continue
                 start_line_number = self._get_start_line_number(content, file=tf_file, search_regex=f'module\s+"{module_name}"\s+\{{')
                 found_resources.append(
-                    TerraformModule(
-                        name=module_name, _source=value["source"], current_version=value["version"], _source_file=tf_file.absolute().as_posix(), start_line_number=start_line_number
-                    )
+                    TerraformModule(name=module_name, source_string=value["source"], current_version=value["version"], source_file=tf_file, start_line_number=start_line_number)
                 )
         return found_resources
 
