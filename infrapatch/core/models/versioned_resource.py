@@ -16,16 +16,23 @@ class ResourceStatus:
     PATCHED = "patched"
     PATCH_ERROR = "patch_error"
     NO_VERSION_FOUND = "no_version_found"
+    
+    
+@dataclass
+class VersionedResourceOptions:
+    ignore_resource: bool
 
 
 @dataclass
 class VersionedResource:
     name: str
     current_version: str
+    start_line_number: int
     _source_file: str
     _newest_version: Optional[str] = None
     _status: str = ResourceStatus.UNPATCHED
     _github_repo: Optional[str] = None
+    options: Optional[VersionedResourceOptions] = None
 
     @property
     def source_file(self) -> Path:
