@@ -1,4 +1,3 @@
-import json
 import logging as log
 from pathlib import Path
 from typing import Sequence, Union
@@ -11,10 +10,13 @@ from rich.console import Console
 from infrapatch.core.models.statistics import ProviderStatistics, Statistics
 from infrapatch.core.models.versioned_resource import ResourceStatus, VersionedResource, VersionedResourceReleaseNotes
 from infrapatch.core.providers.base_provider_interface import BaseProviderInterface
+from infrapatch.core.utils.options_processor import OptionsProcessorInterface
 
 
 class ProviderHandler:
-    def __init__(self, providers: Sequence[BaseProviderInterface], console: Console, statistics_file: Path, repo: Union[Repo, None] = None) -> None:
+    def __init__(
+        self, providers: Sequence[BaseProviderInterface], console: Console, statistics_file: Path, options_processor: OptionsProcessorInterface, repo: Union[Repo, None] = None
+    ) -> None:
         self.providers: dict[str, BaseProviderInterface] = {}
         for provider in providers:
             self.providers[provider.get_provider_name()] = provider
@@ -23,19 +25,26 @@ class ProviderHandler:
         self.console = console
         self.statistics_file = statistics_file
         self.repo = repo
+        self.options_processor = options_processor
 
     def get_resources(self, disable_cache: bool = False) -> dict[str, Sequence[VersionedResource]]:
         for provider_name, provider in self.providers.items():
             if provider_name not in self._resource_cache:
                 log.debug(f"Fetching resources for provider {provider.get_provider_name()} since cache is empty.")
-                self._resource_cache[provider.get_provider_name()] = provider.get_resources()
-                continue
             elif disable_cache:
                 log.debug(f"Fetching resources for provider {provider.get_provider_name()} since cache is disabled.")
-                self._resource_cache[provider.get_provider_name()] = provider.get_resources()
-                continue
             else:
                 log.debug(f"Using cached resources for provider {provider.get_provider_name()}.")
+                continue
+            resources = provider.get_resources()
+            for resource in resources:
+                self.options_processor.process_options_for_resource(resource)
+            ignored_resources = [resource for resource in resources if resource.options.ignore_resource]
+            un_ignored_resources = [resource for resource in resources if not resource.options.ignore_resource]
+            for resource in ignored_resources:
+                log.debug(f"Ignoring resource '{resource.name}' from provider {provider.get_provider_display_name()}since its marked as ignored.")
+
+            self._resource_cache[provider.get_provider_name()] = un_ignored_resources
         return self._resource_cache
 
     def get_patched_resources(self) -> dict[str, Sequence[VersionedResource]]:
@@ -127,9 +136,9 @@ class ProviderHandler:
             log.debug(f"Deleting existing statistics file {self.statistics_file.absolute().as_posix()}.")
             self.statistics_file.unlink()
         log.debug(f"Writing statistics to {self.statistics_file.absolute().as_posix()}.")
-        statistics_dict = self._get_statistics(disable_cache).to_dict()
+        statistics = self._get_statistics(disable_cache)
         with open(self.statistics_file, "w") as f:
-            f.write(json.dumps(statistics_dict))
+            f.write(statistics.model_dump_json())
 
     def print_statistics_table(self, disable_cache: bool = False):
         table = self._get_statistics(disable_cache).get_rich_table()

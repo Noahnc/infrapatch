@@ -18,8 +18,12 @@ The CLI works by scanning your .tf files for versioned providers and modules and
     - [Authentication](#authentication-1)
       - [.terraformrc file:](#terraformrc-file)
       - [infrapatch\_credentials.json file:](#infrapatch_credentialsjson-file)
-    - [Setup Development Environment for InfraPatch](#setup-development-environment-for-infrapatch)
-    - [Contributing](#contributing)
+  - [Global](#global)
+    - [Resource Options](#resource-options)
+      - [Available Options](#available-options)
+      - [Example](#example)
+  - [Setup Development Environment for InfraPatch](#setup-development-environment-for-infrapatch)
+  - [Contributing](#contributing)
 
 
 ## GitHub Action
@@ -184,7 +188,62 @@ You can also specify the path to the credentials file with the `--credentials-fi
 infrapatch --credentials-file-path "path/to/credentials/file" update
 ```
 
-### Setup Development Environment for InfraPatch
+## Global 
+
+The following section describes configurations and behaviors that are applicable to the Github Action and the CLI.
+
+### Resource Options
+
+InfraPatch supports individual resource options to change the behavior for a specific resource.
+Resource options can be specified one line obove your resource definition with the following syntax:
+
+```hcl
+# infrapatch_options: <option_name1>=<option_value1>, <option_name2>=<option_value2>
+module "example" {
+  source = "terraform-aws-modules/example"
+  name: "demo"
+}
+
+terraform {
+  required_providers {
+    # infrapatch_options: <option_name1>=<option_value1>,<option_name2>=<option_value2>
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+}
+```
+
+#### Available Options
+
+Currently, the following options are available:
+
+| Option Name       | Description                                                   | Default Value |
+| ----------------- | ------------------------------------------------------------- | ------------- |
+| `ignore_resource` | If set to `true`, the resource will be ignored by InfraPatch. | `false`       |
+
+#### Example 
+
+The following example shows how to ignore a terraform module and a terraform provider:
+  
+  ```hcl
+  # infrapatch_options: ignore_resource=true
+  module "example" {
+    source = "terraform-aws-modules/example"
+    name: "demo"
+  }
+
+  terraform {
+    required_providers {
+      # infrapatch_options: ignore_resource=true
+      aws = {
+        source = "hashicorp/aws"
+      }
+    }
+  }
+  ```
+
+  ## Setup Development Environment for InfraPatch
 
 This repository contains a devcontainer configuration for VSCode. To use it, you need to install the following tools:
 * ["Dev Containers VSCode Extension"](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) for VSCode.
@@ -193,7 +252,7 @@ This repository contains a devcontainer configuration for VSCode. To use it, you
 After installation, you can open the repository in the devcontainer by clicking on the green "Open in Container" button in the bottom left corner of VSCode.
 During the first start, the devcontainer will build the container image and install all dependencies.
 
-### Contributing
+## Contributing
 
 If you have any ideas for improvements or find any bugs, feel free to open an issue or create a pull request.
 

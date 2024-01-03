@@ -16,6 +16,7 @@ setup(
         "semantic_version~=2.10.0",
         "pytablewriter~=1.2.0",
         "PyGithub~=2.1.1",
+        "pydantic~=2.5.2",
     ],
     python_requires=">=3.11",
     entry_points="""

@@ -1,48 +1,37 @@
 import logging as log
 import re
-from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional
 
 from infrapatch.core.models.versioned_resource import VersionedResource
 
 
-@dataclass(kw_only=True)
 class VersionedTerraformResource(VersionedResource):
-    _source: str
-    _base_domain: Optional[str] = None
-    _identifier: Optional[str] = None
+    source_string: str
+    base_domain: Optional[str] = None
+    identifier: Optional[str] = None
 
     @property
     def source(self) -> str:
-        if self._source is None:
+        if self.source_string is None:
             raise Exception("Source is None.")
-        return self._source
-
-    @property
-    def base_domain(self) -> Optional[str]:
-        return self._base_domain
+        return self.source_string
 
     @property
     def resource_name(self):
         raise NotImplementedError()
 
-    @property
-    def identifier(self) -> Union[str, None]:
-        return self._identifier
-
     def find(self, resources):
         filtered_resources = super().find(resources)
-        return [resource for resource in filtered_resources if resource._source == self._source]
+        return [resource for resource in filtered_resources if resource.source == self.source]
 
 
-@dataclass
 class TerraformModule(VersionedTerraformResource):
-    def __post_init__(self):
-        self.source = self._source
+    def model_post_init(self, __context):
+        self.source = self.source_string
 
     @property
     def source(self) -> str:
-        return self._source
+        return self.source_string
 
     @property
     def resource_name(self):
@@ -51,27 +40,26 @@ class TerraformModule(VersionedTerraformResource):
     @source.setter
     def source(self, source: str):
         source_lower_case = source.lower()
-        self._source = source_lower_case
-        self._newest_version = None
+        self.source_string = source_lower_case
+        self.newest_version_string = None
         if re.match(r"^[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$", source_lower_case):
             log.debug(f"Source '{source_lower_case}' is from a generic registry.")
-            self._base_domain = source_lower_case.split("/")[0]
-            self._identifier = "/".join(source_lower_case.split("/")[1:])
+            self.base_domain = source_lower_case.split("/")[0]
+            self.identifier = "/".join(source_lower_case.split("/")[1:])
         elif re.match(r"^[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$", source_lower_case):
             log.debug(f"Source '{source_lower_case}' is from the public registry.")
-            self._identifier = source_lower_case
+            self.identifier = source_lower_case
         else:
             raise Exception(f"Source '{source_lower_case}' is not a valid terraform resource source.")
 
 
-@dataclass
 class TerraformProvider(VersionedTerraformResource):
-    def __post_init__(self):
-        self.source = self._source
+    def model_post_init(self, __context):
+        self.source = self.source_string
 
     @property
     def source(self) -> str:
-        return self._source
+        return self.source_string
 
     @property
     def resource_name(self):
@@ -80,14 +68,14 @@ class TerraformProvider(VersionedTerraformResource):
     @source.setter
     def source(self, source: str) -> None:
         source_lower_case = source.lower()
-        self._source = source_lower_case
-        self._newest_version = None
+        self.source_string = source_lower_case
+        self.newest_version_string = None
         if re.match(r"^[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$", source_lower_case):
             log.debug(f"Source '{source_lower_case}' is from a generic registry.")
-            self._base_domain = source_lower_case.split("/")[0]
-            self._identifier = "/".join(source_lower_case.split("/")[1:])
+            self.base_domain = source_lower_case.split("/")[0]
+            self.identifier = "/".join(source_lower_case.split("/")[1:])
         elif re.match(r"^[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$", source_lower_case):
             log.debug(f"Source '{source_lower_case}' is from the public registry.")
-            self._identifier = source_lower_case
+            self.identifier = source_lower_case
         else:
             raise Exception(f"Source '{source_lower_case}' is not a valid terraform resource source.")
