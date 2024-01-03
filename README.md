@@ -18,12 +18,12 @@ The CLI works by scanning your .tf files for versioned providers and modules and
     - [Authentication](#authentication-1)
       - [.terraformrc file:](#terraformrc-file)
       - [infrapatch\_credentials.json file:](#infrapatch_credentialsjson-file)
-    - [Setup Development Environment for InfraPatch](#setup-development-environment-for-infrapatch)
-    - [Contributing](#contributing)
   - [Global](#global)
     - [Resource Options](#resource-options)
       - [Available Options](#available-options)
       - [Example](#example)
+  - [Setup Development Environment for InfraPatch](#setup-development-environment-for-infrapatch)
+  - [Contributing](#contributing)
 
 
 ## GitHub Action
@@ -188,19 +188,6 @@ You can also specify the path to the credentials file with the `--credentials-fi
 infrapatch --credentials-file-path "path/to/credentials/file" update
 ```
 
-### Setup Development Environment for InfraPatch
-
-This repository contains a devcontainer configuration for VSCode. To use it, you need to install the following tools:
-* ["Dev Containers VSCode Extension"](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) for VSCode.
-* A local Docker installation like [Docker Desktop](https://www.docker.com/products/docker-desktop).
-  
-After installation, you can open the repository in the devcontainer by clicking on the green "Open in Container" button in the bottom left corner of VSCode.
-During the first start, the devcontainer will build the container image and install all dependencies.
-
-### Contributing
-
-If you have any ideas for improvements or find any bugs, feel free to open an issue or create a pull request.
-
 ## Global 
 
 The following section describes configurations and behaviors that are applicable to the Github Action and the CLI.
@@ -211,7 +198,7 @@ InfraPatch supports individual resource options to change the behavior for a spe
 Resource options can be specified one line obove your resource definition with the following syntax:
 
 ```hcl
-# infrapatch_options: <option_name>=<option_value>
+# infrapatch_options: <option_name1>=<option_value1>, <option_name2>=<option_value2>
 module "example" {
   source = "terraform-aws-modules/example"
   name: "demo"
@@ -219,7 +206,7 @@ module "example" {
 
 terraform {
   required_providers {
-    # infrapatch_options: <option_name>=<option_value>
+    # infrapatch_options: <option_name1>=<option_value1>,<option_name2>=<option_value2>
     aws = {
       source = "hashicorp/aws"
     }
@@ -231,9 +218,9 @@ terraform {
 
 Currently, the following options are available:
 
-| Option Name | Description | Default Value |
-| ----------- | ----------- | ------------- |
-| `ignore_resource` | If set to `true`, the resource will be ignored by InfraPatch. | `false` |
+| Option Name       | Description                                                   | Default Value |
+| ----------------- | ------------------------------------------------------------- | ------------- |
+| `ignore_resource` | If set to `true`, the resource will be ignored by InfraPatch. | `false`       |
 
 #### Example 
 
@@ -255,4 +242,17 @@ The following example shows how to ignore a terraform module and a terraform pro
     }
   }
   ```
+
+  ## Setup Development Environment for InfraPatch
+
+This repository contains a devcontainer configuration for VSCode. To use it, you need to install the following tools:
+* ["Dev Containers VSCode Extension"](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) for VSCode.
+* A local Docker installation like [Docker Desktop](https://www.docker.com/products/docker-desktop).
+  
+After installation, you can open the repository in the devcontainer by clicking on the green "Open in Container" button in the bottom left corner of VSCode.
+During the first start, the devcontainer will build the container image and install all dependencies.
+
+## Contributing
+
+If you have any ideas for improvements or find any bugs, feel free to open an issue or create a pull request.
 
