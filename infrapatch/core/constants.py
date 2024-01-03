@@ -5,3 +5,5 @@ CLI_WIDTH = 160
 APP_NAME = "InfraPatch"
 
 DEFAULT_CREDENTIALS_FILE_NAME = "infrapatch_credentials.json"
+
+infrapatch_options_prefix = "# infrapatch_options:"

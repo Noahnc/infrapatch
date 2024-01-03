@@ -2,6 +2,7 @@ import glob
 import logging as log
 import platform
 from pathlib import Path
+import re
 from typing import Protocol, Sequence
 
 import pygohcl
@@ -64,30 +65,37 @@ class HclHandler(HclHandlerInterface):
 
         with open(tf_file.absolute(), "r") as file:
             try:
-                terraform_file_dict = pygohcl.loads(file.read())
+                content = file.read()
+                terraform_file_dict = pygohcl.loads(content)
             except Exception as e:
                 raise HclParserException(f"Could not parse file '{tf_file}': {e}")
             found_resources = []
             if get_modules:
-                found_resources.extend(self._get_terraform_modules_from_dict(terraform_file_dict, tf_file))
+                found_resources.extend(self._get_terraform_modules_from_dict(terraform_file_dict, tf_file, content))
             if get_providers:
-                found_resources.extend(self._get_terraform_providers_from_dict(terraform_file_dict, tf_file))
+                found_resources.extend(self._get_terraform_providers_from_dict(terraform_file_dict, tf_file, content))
             return found_resources
 
-    def _get_terraform_providers_from_dict(self, terraform_file_dict: dict, tf_file: Path) -> Sequence[TerraformProvider]:
+    def _get_terraform_providers_from_dict(self, terraform_file_dict: dict, tf_file: Path, content: str) -> Sequence[TerraformProvider]:
         found_resources = []
         if "terraform" in terraform_file_dict:
             if "required_providers" in terraform_file_dict["terraform"]:
                 providers = terraform_file_dict["terraform"]["required_providers"]
                 for provider_name, provider_config in providers.items():
+                    source = provider_config["source"]
+                    start_line_number = self._get_start_line_number(content, file=tf_file, search_regex=rf'{provider_name}\s*=\s*\{{[^}}]*source\s*=\s*"{source}"[^}}]*\}}')
                     found_resources.append(
                         TerraformProvider(
-                            name=provider_name, _source=provider_config["source"], current_version=provider_config["version"], _source_file=tf_file.absolute().as_posix()
+                            name=provider_name,
+                            source_string=source,
+                            current_version=provider_config["version"],
+                            source_file=tf_file,
+                            start_line_number=start_line_number,
                         )
                     )
         return found_resources
 
-    def _get_terraform_modules_from_dict(self, terraform_file_dict: dict, tf_file: Path) -> Sequence[TerraformProvider]:
+    def _get_terraform_modules_from_dict(self, terraform_file_dict: dict, tf_file: Path, content: str) -> Sequence[TerraformProvider]:
         found_resources = []
         if "module" in terraform_file_dict:
             modules = terraform_file_dict["module"]
@@ -98,8 +106,19 @@ class HclHandler(HclHandlerInterface):
                 if "version" not in value:
                     log.debug(f"Skipping module '{module_name}' because it has no version attribute.")
                     continue
-                found_resources.append(TerraformModule(name=module_name, _source=value["source"], current_version=value["version"], _source_file=tf_file.absolute().as_posix()))
+                start_line_number = self._get_start_line_number(content, file=tf_file, search_regex=f'module\s+"{module_name}"\s+\{{')
+                found_resources.append(
+                    TerraformModule(name=module_name, source_string=value["source"], current_version=value["version"], source_file=tf_file, start_line_number=start_line_number)
+                )
         return found_resources
+
+    def _get_start_line_number(self, content: str, file: Path, search_regex: str) -> int:
+        result = re.search(search_regex, content, re.DOTALL)
+        if result is None:
+            raise Exception(f"Could not find line matching regex '{search_regex}' in file '{file.name}'")
+        line_number = content[: result.start()].count("\n") + 1
+        log.debug(f"Found line number {line_number} for regex '{search_regex}' in file '{file.name}'")
+        return line_number
 
     def get_all_terraform_files(self, root: Path) -> Sequence[Path]:
         if not root.is_dir():

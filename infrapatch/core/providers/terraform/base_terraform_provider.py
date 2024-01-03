@@ -55,7 +55,7 @@ class TerraformProvider(BaseProviderInterface):
             resource.newest_version = self.registry_handler.get_newest_version(resource)
             source = self.registry_handler.get_source(resource)
             if source is not None and "github.com" in source:
-                resource.set_github_repo(source)
+                resource.github_repo = source
         return resources
 
     def patch_resource(self, resource: VersionedTerraformResource) -> VersionedTerraformResource:
