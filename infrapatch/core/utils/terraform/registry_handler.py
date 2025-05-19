@@ -2,6 +2,7 @@ import json
 import logging as log
 from dataclasses import dataclass
 from distutils.version import StrictVersion
+import re
 from typing import Protocol, Union
 from urllib import request
 from urllib.parse import urlparse
@@ -56,17 +57,20 @@ class RegistryHandler(RegistryHandlerInterface):
         if len(versions) == 0:
             log.debug(f"No versions found for resource '{resource.source}'.")
             return None
+
         valid_versions = []
+        version_re = re.compile(r"^(\d+) \. (\d+) (\. (\d+))? ([ab](\d+))?$", re.VERBOSE | re.ASCII)
         for version in versions:
             if version["version"] is None:
                 continue
-            try:
-                valid_versions.append(StrictVersion(version["version"]))
-            except Exception as e:
-                log.debug(f"Version '{version['version']}' is not valid: {e}")
+            match = version_re.match(version["version"])
+            if not match:
+                log.debug(f"Version '{version['version']}' does not match the expected format, ignoring it.")
                 continue
-        sorted_versions = sorted(valid_versions, reverse=True)
-        newest_version = sorted_versions[0]["version"]
+            valid_versions.append(version["version"])
+
+        sorted_versions = sorted(valid_versions, key=lambda k: StrictVersion(k), reverse=True)
+        newest_version = sorted_versions[0]
 
         cache.newest_version = newest_version
 
