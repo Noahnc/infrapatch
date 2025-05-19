@@ -1,14 +1,13 @@
-from dataclasses import dataclass
-from typing import Union
 import json
 import logging as log
+from dataclasses import dataclass
 from distutils.version import StrictVersion
-from typing import Protocol
+import re
+from typing import Protocol, Union
 from urllib import request
 from urllib.parse import urlparse
 
-
-from infrapatch.core.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider
+from infrapatch.core.models.versioned_terraform_resources import TerraformModule, TerraformProvider, VersionedTerraformResource
 
 
 class TerraformRegistryException(Exception):
@@ -16,11 +15,9 @@ class TerraformRegistryException(Exception):
 
 
 class RegistryHandlerInterface(Protocol):
-    def get_newest_version(self, resource: VersionedTerraformResource):
-        ...
+    def get_newest_version(self, resource: VersionedTerraformResource): ...
 
-    def get_source(self, resource: VersionedTerraformResource):
-        ...
+    def get_source(self, resource: VersionedTerraformResource): ...
 
 
 @dataclass
@@ -60,8 +57,20 @@ class RegistryHandler(RegistryHandlerInterface):
         if len(versions) == 0:
             log.debug(f"No versions found for resource '{resource.source}'.")
             return None
-        sorted_versions = sorted(versions, key=lambda k: StrictVersion(k["version"]), reverse=True)
-        newest_version = sorted_versions[0]["version"]
+
+        valid_versions = []
+        version_re = re.compile(r"^(\d+) \. (\d+) (\. (\d+))? ([ab](\d+))?$", re.VERBOSE | re.ASCII)
+        for version in versions:
+            if version["version"] is None:
+                continue
+            match = version_re.match(version["version"])
+            if not match:
+                log.debug(f"Version '{version['version']}' does not match the expected format, ignoring it.")
+                continue
+            valid_versions.append(version["version"])
+
+        sorted_versions = sorted(valid_versions, key=lambda k: StrictVersion(k), reverse=True)
+        newest_version = sorted_versions[0]
 
         cache.newest_version = newest_version
 
