@@ -1,14 +1,12 @@
-from dataclasses import dataclass
-from typing import Union
 import json
 import logging as log
+from dataclasses import dataclass
 from distutils.version import StrictVersion
-from typing import Protocol
+from typing import Protocol, Union
 from urllib import request
 from urllib.parse import urlparse
 
-
-from infrapatch.core.models.versioned_terraform_resources import VersionedTerraformResource, TerraformModule, TerraformProvider
+from infrapatch.core.models.versioned_terraform_resources import TerraformModule, TerraformProvider, VersionedTerraformResource
 
 
 class TerraformRegistryException(Exception):
@@ -16,11 +14,9 @@ class TerraformRegistryException(Exception):
 
 
 class RegistryHandlerInterface(Protocol):
-    def get_newest_version(self, resource: VersionedTerraformResource):
-        ...
+    def get_newest_version(self, resource: VersionedTerraformResource): ...
 
-    def get_source(self, resource: VersionedTerraformResource):
-        ...
+    def get_source(self, resource: VersionedTerraformResource): ...
 
 
 @dataclass
