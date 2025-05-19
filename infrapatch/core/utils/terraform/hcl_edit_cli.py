@@ -10,11 +10,9 @@ class HclEditCliException(Exception):
 
 
 class HclEditCliInterface(Protocol):
-    def update_hcl_value(self, resource: str, file: Path, value: str):
-        ...
+    def update_hcl_value(self, resource: str, file: Path, value: str): ...
 
-    def get_hcl_value(self, resource: str, file: Path) -> str:
-        ...
+    def get_hcl_value(self, resource: str, file: Path) -> str: ...
 
 
 class HclEditCli(HclEditCliInterface):
