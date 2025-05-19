@@ -117,7 +117,7 @@ options_strings = ["ignore_resource=true", "ignore_resource = true, test_option=
 def test_options_format_processing(options_processor: OptionsProcessor, options_string: str):
     options_dict = options_processor._process_options_string(options_string)
     assert options_dict is not None
-    assert options_dict is not {}
+    assert options_dict != {}
 
     if options_string == "ignore_resource=true":
         assert options_dict["ignore_resource"] == "true"
