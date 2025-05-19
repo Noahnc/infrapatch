@@ -60,7 +60,16 @@ class RegistryHandler(RegistryHandlerInterface):
         if len(versions) == 0:
             log.debug(f"No versions found for resource '{resource.source}'.")
             return None
-        sorted_versions = sorted(versions, key=lambda k: StrictVersion(k["version"]), reverse=True)
+        valid_versions = []
+        for version in versions:
+            if version["version"] is None:
+                continue
+            try:
+                valid_versions.append(StrictVersion(version["version"]))
+            except Exception as e:
+                log.debug(f"Version '{version['version']}' is not valid: {e}")
+                continue
+        sorted_versions = sorted(valid_versions, reverse=True)
         newest_version = sorted_versions[0]["version"]
 
         cache.newest_version = newest_version
