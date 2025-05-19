@@ -6,8 +6,7 @@ from infrapatch.core.models.versioned_resource import VersionedResource, Version
 
 
 class OptionsProcessorInterface(Protocol):
-    def process_options_for_resource(self, resource: VersionedResource) -> VersionedResource:
-        ...
+    def process_options_for_resource(self, resource: VersionedResource) -> VersionedResource: ...
 
 
 class OptionsProcessor(OptionsProcessorInterface):
